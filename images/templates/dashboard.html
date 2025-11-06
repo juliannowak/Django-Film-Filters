@@ -1,0 +1,10 @@
+<p>id: {{id}}</p>
+
+{% if images %}
+  {% for image in images %}
+    <img src="{{ image.image.url }}" alt="{{ image.name }}">
+    <br>
+  {% endfor %}
+{% else %}
+  <p>No images found.</p>
+{% endif %}

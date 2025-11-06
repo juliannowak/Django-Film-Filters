@@ -1,0 +1,122 @@
+<!--context: id, images, form-->
+<head>
+  {% load django_bootstrap5 %}
+  {% bootstrap_css %}
+  {% bootstrap_javascript %}
+  <script>
+    function switchTest() {
+      alert('Hello from the button!')
+    }
+
+    function switchFilter(id, switches) {
+      //flip 
+      console.log('Item ID:', id);
+      let new_switches = JSON.parse(document.getElementById('my-switches').textContent);
+      console.log('switches:', new_switches);
+      new_switches[id] = !new_switches[id]
+      console.log('new_switches:', new_switches);
+      let currentUrl = window.location.href;
+      let urlParts = currentUrl.split('?');
+      let baseUrl = urlParts[0];
+      let existingQueryParams = new URLSearchParams(urlParts[1] || '');
+      //update
+      existingQueryParams.set('switches', new_switches);
+      let newUrl = baseUrl + '?' + existingQueryParams.toString();
+      //reload
+      window.location.replace(newUrl);
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                let cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function reloadPageWithModifiedPost(newPostData) {
+      // Create a new form element
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = window.location.href; // Target the current page
+
+      // Add hidden input fields for the modified POST variables
+      for (const key in newPostData) {
+          if (newPostData.hasOwnProperty(key)) {
+              const input = document.createElement('input');
+              input.type = 'hidden';
+              input.name = key;
+              input.value = newPostData[key];
+              form.appendChild(input);
+          }
+      }
+
+      //Attach CSRF Cookie
+      const csrftoken = getCookie('csrftoken');
+      const csrfInput = document.createElement('input');
+      csrfInput.type = 'hidden';
+      csrfInput.name = 'csrfmiddlewaretoken';
+      csrfInput.value = csrftoken; // Use the retrieved token
+      form.appendChild(csrfInput);
+
+      // Append the form to the body and submit it
+      document.body.appendChild(form);
+      form.submit();
+    }
+  </script>
+  <style>
+    .bold-select-box option:checked  {
+      font-weight: bold;
+    }
+    .bold-select-box option[value="1"]  {
+      font-weight: bold;
+    }
+    .bold-select-box option[value="2"]  {
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+{{ switches|json_script:"my-switches" }}
+<h1>Your Image Dashboard/Gallery</h1><br>
+{% if id %}
+  <p>Your ID (keep this if you want to find your images online again): {{id}}</p>
+{% endif %}
+<p>Click or tap the images to see how they look without the film filter applied</p>
+
+{% if context %}
+  <ul>
+  {% for image, filtered, switch in context %}
+    {% if switch %}
+      <li>
+        <h4>Image #{{forloop.counter}} (filtered): {{ image.name }}</h4><br>
+        <img onclick="switchFilter('{{forloop.counter0}}', '{{switches}}')" width=480 src="{{ image.filtered.url }}" alt="{{ image.name }}">
+      </li>
+    {% else %}
+      <li>
+        <h4>Image #{{forloop.counter}} (unfiltered): {{ image.name }}</h4><br>
+        <img onclick="switchFilter('{{forloop.counter0}}', '{{switches}}')" width=480 src="{{ image.image.url }}" alt="{{ image.name }}">
+      </li>
+    {% endif %}
+  {% endfor %}
+  </ul>
+{% else %}
+  <p>No images found.<br>Please upload an image to begin</p>
+{% endif %}
+
+<h3>Upload Form</h3>
+<form action="" method="post" class="row g-3 pb-4" enctype="multipart/form-data">
+{% csrf_token %}
+<br>
+<table>
+    {{ form.as_table }}
+</table>
+<input type="submit" value="Submit">

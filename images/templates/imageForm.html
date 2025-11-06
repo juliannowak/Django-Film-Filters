@@ -1,0 +1,25 @@
+<!--the form html options:-->
+<head>
+    {% load django_bootstrap5 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+  <style>
+    .bold-select-box option:checked  {
+      font-weight: bold;
+    }
+    .bold-select-box option[value="1"]  {
+      font-weight: bold;
+    }
+    .bold-select-box option[value="2"]  {
+      font-weight: bold;
+    }
+  </style>
+</head>
+<h3>Upload Page</h3>
+<form action="" method="post" class="row g-3 pb-4" enctype="multipart/form-data">
+{% csrf_token %}
+<br>
+<table>
+    {{ form.as_table }}
+</table>
+<input type="submit" value="Submit">

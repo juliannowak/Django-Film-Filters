@@ -1,0 +1,61 @@
+<!-- images.html -->
+<form method="post">
+  {% csrf_token %}
+  <input type="text" name="session_key" placeholder="Session ID / Cookie">
+  <input type="submit" value="Search">
+  <p id="id">Your cookie / session ID is: </p>
+</form>
+
+{% if images %}
+  {% for image in images %}
+    <img src="{{ image.image.url }}" alt="{{ image.name }}">
+  {% endfor %}
+{% else %}
+  <p>No images found.</p>
+{% endif %}
+
+<!-- add this at the end of the body for async support -->
+<script>
+  //setup (form onLoad)
+  $(document).ready(function(){
+    // configure slider
+    $('.slider').slick({
+      dots: true,
+      infinite: true,
+      speed: 500,
+      fade: true,
+      cssEase: 'linear',
+      autoplay: true, 
+      autoplaySpeed: 3000
+    });
+    // fill in session key
+    $('#id').append("")
+    
+    // populate with images
+    $('form').on('submit', function(event) {
+      event.preventDefault();
+      var session_key = $('input[name="session_key"]').val();
+      $.ajax({
+        url: "{% url 'images_by_session_id' %}",
+        //id: name,
+        method: 'POST',
+        data: {
+            //csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
+            session_key: session_key.toString()
+        },
+        dataType: 'json',
+        success: function(response) {
+          var images = response.data;
+          var slider = $('.slider');
+          slider.slick('removeSlide', null, null, true);
+          $.each(images, function(index, image) {
+            slider.slick('slickAdd', '<img class="slick" src="' + image.url + '" alt="' + image.name + '">');
+          });
+        },
+        error: function(response) {
+          console.log(response);
+        }
+      });
+    });
+  });
+</script>
