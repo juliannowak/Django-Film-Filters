@@ -12,27 +12,24 @@ def session_directory_path(instance, filename):
     return os.path.join('session', str(instance.session_key), filename)
     #return '/session/{0}/{1}'.format(instance.session_key, filename)
 
-def get_film_choices():    
-    files = glob.glob(os.path.join(settings.CLUT_DIR, "**/*.png"), recursive=True)
-    names = [os.path.basename(str(file)) for file in glob.glob(os.path.join(settings.CLUT_DIR, "**/*.png"), recursive=True)]
-
+def get_film_choices():
     names = ["Color"]
     files = ["1"]
-    files += glob.glob(os.path.join(settings.CLUT_DIR, "Color\\**/*.png"), recursive=True)
-    names += [os.path.basename(str(file)) for file in glob.glob(os.path.join(settings.CLUT_DIR, "Color\\**/*.png"), recursive=True)]
+    files += glob.glob(os.path.join(os.getcwd(), settings.CLUT_DIR, "Color/*.png"), recursive=True)
+    names += [os.path.basename(str(file)) for file in glob.glob(os.path.join(os.getcwd(), settings.CLUT_DIR, "Color/*.png"), recursive=True)]
     files += ["2"]
     names += ["Black and White"]
-    files += glob.glob(os.path.join(settings.CLUT_DIR, "Black and White\\**/*.png"), recursive=True)
-    names += [os.path.basename(str(file)) for file in glob.glob(os.path.join(settings.CLUT_DIR, "Black and White\\**/*.png"), recursive=True)]
+    files += glob.glob(os.path.join(os.getcwd(), settings.CLUT_DIR, "Black and White/*.png"), recursive=True)
+    names += [os.path.basename(str(file)) for file in glob.glob(os.path.join(os.getcwd(), settings.CLUT_DIR, "Black_and_White/*.png"), recursive=True)]
     file_map = dict(zip(files,names))
-    #print(file_map["1"])
+    print(len(file_map.keys()))
     return file_map
 
 def validate_film_choice(value):
     if not isinstance(value, str):
         raise ValidationError("This field must be a string of characters.")
     
-    if value in ("Color", "BlackWhite"):
+    if value in ("Color", "Black and White"):
         raise ValidationError(f"{value} is not an film. It is just there to seperate Color from Black and White.") #redirect back to create page
 
 class ImageUpload(models.Model):
