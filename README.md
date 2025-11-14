@@ -1,7 +1,7 @@
 # Django-Film-Filters
-## check it out here: http://138-128-247-76.cloud-xip.com/
+### check it out here: http://138-128-247-76.cloud-xip.com/
 
-# Local Self-Hosting:
+## Local Self-Hosting:
 execute these statements line by line, or collapse them all (remove all comment lines and '\n' occurrences) and copy-paste the result into a bash shell.
 ```bash
 #clone my django project repo
@@ -10,13 +10,13 @@ cd Django-Film-Filters;
 #clone the hald-clut repo into the project and copy over the files to where they need to be.
 git clone hald-clut;
 mkdir CLUT;
-cp \hald-clut\HaldCLUT\Film Simulation\Color\* CLUT\;
-cp \hald-clut\HaldCLUT\Film Simulation\Black and White\* CLUT\;
+cp \hald-clut\HaldCLUT\Film Simulation\Color\* CLUT\ ;
+cp \hald-clut\HaldCLUT\Film Simulation\Black and White\* CLUT\ ;
 cd CLUT\Color;
-find . -type f -exec mv {} . \;
+find . -type f -exec mv {} . \ ;
 cd ..; cd ..;
 cd CLUT\Black and White
-find . -type f -exec mv {} . \;
+find . -type f -exec mv {} . \ ;
 cd ..; cd ..;
 #install an environment manager and set it up for the project
 sudo apt install miniconda3;
@@ -29,7 +29,7 @@ python manage.py migrate;
 python manage.py runserver;
 
 ```
-# Public Hosting (on VPS or similar):
+## Public Hosting (on VPS or similar):
 - connect it to a reverse proxy server like Nginx (using gunicorn)
 - change the django secret in the settings file, and switch DEBUG=True
 - remember DO NOT host with root account and disable root access when it is not needed
