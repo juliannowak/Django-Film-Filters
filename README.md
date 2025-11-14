@@ -33,3 +33,9 @@ python manage.py runserver;
 - connect it to a reverse proxy server like Nginx (using gunicorn)
 - change the django secret in the settings file, and switch DEBUG=True
 - remember DO NOT host with root account and disable root access when it is not needed
+
+
+add this
+cd images/templates/
+git clone https://github.com/nstevens1040/btcdonate.git
+#replace address there with your address (make one liner)
