@@ -18,6 +18,11 @@ cd ..; cd ..;
 cd CLUT\Black and White
 find . -type f -exec mv {} . \ ;
 cd ..; cd ..;
+#optional: if you want a donate page, remember to replace YOUR_ADDRESS with your BTC address.
+cd images/templates/ ;
+git clone https://github.com/nstevens1040/btcdonate.git;
+sed -i 's/3NHxJ9j1hBxqQGM9BNWXE9j1QLxxikhpGe/YOUR_ADDRESS/g' btcdonate/index.html;
+cd ..; cd ..;
 #install an environment manager and set it up for the project
 sudo apt install miniconda3;
 conda create -n django-environment;
@@ -33,9 +38,3 @@ python manage.py runserver;
 - connect it to a reverse proxy server like Nginx (using gunicorn)
 - change the django secret in the settings file, and switch DEBUG=True
 - remember DO NOT host with root account and disable root access when it is not needed
-
-
-add this
-cd images/templates/
-git clone https://github.com/nstevens1040/btcdonate.git
-#replace address there with your address (make one liner)
