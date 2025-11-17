@@ -1,4 +1,4 @@
-from datetime import timezone
+
 import math
 import os
 import io
@@ -140,6 +140,8 @@ def createImageForm(request):
             instance.save()
             form.save()
             return uploadSuccess(request, {'id': key}) # Redirect to a success page
+        else:
+            pass #redirect back to upload page
     else:
         form = ImageUploadForm()
         return render(request, 'imageForm.html', {'form': form})
