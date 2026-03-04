@@ -8,15 +8,21 @@ execute these statements line by line, or collapse them all (remove all comment 
 git clone Django-Film-Filters;
 cd Django-Film-Filters;
 #clone the hald-clut repo into the project and copy over the files to where they need to be.
-git clone hald-clut;
+git clone https://github.com/cedeber/hald-clut.git;
 mkdir CLUT;
-cp \hald-clut\HaldCLUT\Film Simulation\Color\* CLUT\ ;
-cp \hald-clut\HaldCLUT\Film Simulation\Black and White\* CLUT\ ;
-cd CLUT\Color;
-find . -type f -exec mv {} . \ ;
+mkdir CLUT/Color;
+mkdir CLUT/Black\ and\ White;
+cp -r hald-clut/HaldCLUT/Film\ Simulation/Color/* CLUT/Color ;
+cp -r hald-clut/HaldCLUT/Film\ Simulation/Black\ and\ White/* CLUT/Black\ and\ White ;
+#optional, remove the hald-clut repo
+rm -R hald-clut
+cd CLUT/Color;
+find . -type f -exec mv -t . {} +;
+rmdir */
 cd ..; cd ..;
-cd CLUT\Black and White
-find . -type f -exec mv {} . \ ;
+cd CLUT/Black\ and\ White
+find . -type f -exec mv -t . {} +;
+rmdir */
 cd ..; cd ..;
 #optional: if you want a donate page, remember to replace YOUR_ADDRESS with your BTC address.
 cd images/templates/ ;
@@ -28,7 +34,8 @@ sudo apt install miniconda3;
 conda create -n django-environment;
 conda activate django-environment;
 #install requirements (TODO create requirements.txt option)
-conda install django django-bootstrap5 pillow numpy;
+conda install django pillow numpy;
+python -m pip install django-bootstrap5;
 #start the server
 python manage.py migrate;
 python manage.py runserver;
@@ -38,3 +45,6 @@ python manage.py runserver;
 - connect it to a reverse proxy server like Nginx (using gunicorn)
 - change the django secret in the settings file, and switch DEBUG=True
 - remember DO NOT host with root account and disable root access when it is not needed
+
+## TODOs:
+- BIG UI CHANGE INCOMING: move from page refreshes to AJAX

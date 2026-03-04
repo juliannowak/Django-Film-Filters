@@ -114,13 +114,16 @@ def uploadSuccess(request, context):
 # TODO rename to createImageUpload / create_image_upload
 def createImageForm(request):
     if request.method == 'POST':
+        #make sure session key exists
+        if not request.session.session_key:
+            request.session.save()
+        key = request.session.session_key
+        #instatiate form
         form = ImageUploadForm(request.POST, request.FILES)
         if form.is_valid():
             instance = form.save(commit=False) # Don't save yet
-            if not request.session.session_key:
-                request.session.save()
-            key = request.session.session_key
             instance.session_key =  Session.objects.get(session_key=key) # Auto-populate 'user' field with current user
+            #instatiate filtered image from each image and filter pair
             for filename, file in request.FILES.items(): #TODO FIX filename is the prop name, name is the file name
                 name = request.FILES[filename].name
                 open_image = Image.open(file) #TODO rename
@@ -180,6 +183,7 @@ def image_dashboard(request, session_key=None, switches=[]):
                 }
     return render(request, 'single.html', context)
 
+# TODO a view that dynamically changes filters applied on an image
 # TODO a script that auto cleans up database
 # def clean_up_old(): #by date arguement
 #     images = ImageUpload.objects.all

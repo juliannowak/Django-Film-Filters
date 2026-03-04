@@ -6,13 +6,21 @@
   <p id="id">Your cookie / session ID is: </p>
 </form>
 
-{% if images %}
-  {% for image in images %}
-    <img src="{{ image.image.url }}" alt="{{ image.name }}">
-  {% endfor %}
-{% else %}
-  <p>No images found.</p>
-{% endif %}
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <a class="navbar-brand" href="#">My Images</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarNav">
+    {% if images %}
+      {% for image in images %}
+        <img src="{{ image.image.url }}" alt="{{ image.name }}">
+      {% endfor %}
+    {% else %}
+      <p>No images found.</p>
+    {% endif %}
+  </div>
+</nav>
 
 <!-- add this at the end of the body for async support -->
 <script>

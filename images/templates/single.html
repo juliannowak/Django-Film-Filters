@@ -90,23 +90,34 @@
 {% if id %}
   <p>Your ID (keep this if you want to find your images online again): {{id}}</p>
 {% endif %}
-<p>Click or tap the images to see how they look without the film filter applied</p>
 
 {% if context %}
   <ul>
-  {% for image, filtered, switch in context %}
-    {% if switch %}
-      <li>
-        <h4>Image #{{forloop.counter}} (filtered): {{ image.name }}</h4><br>
-        <img onclick="switchFilter('{{forloop.counter0}}', '{{switches}}')" width=480 src="{{ image.filtered.url }}" alt="{{ image.name }}">
-      </li>
-    {% else %}
-      <li>
-        <h4>Image #{{forloop.counter}} (unfiltered): {{ image.name }}</h4><br>
-        <img onclick="switchFilter('{{forloop.counter0}}', '{{switches}}')" width=480 src="{{ image.image.url }}" alt="{{ image.name }}">
-      </li>
-    {% endif %}
-  {% endfor %}
+    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+      Show Images
+    </button>
+
+    <p>Click or tap the images to see how they look without the film filter applied</p>
+    
+    <div class="collapse" id="collapseExample">
+      {% for image, filtered, switch in context %}
+        {% if switch %}
+          <li>
+            
+            <h4>Image #{{forloop.counter}} (filtered): {{ image.name }}</h4><br>
+            <img onclick="switchFilter('{{forloop.counter0}}', '{{switches}}')" width=480 src="{{ image.filtered.url }}" alt="{{ image.name }}">
+          
+          </li>
+        {% else %}
+          <li>
+           
+            <h4>Image #{{forloop.counter}} (unfiltered): {{ image.name }}</h4><br>
+            <img onclick="switchFilter('{{forloop.counter0}}', '{{switches}}')" width=480 src="{{ image.image.url }}" alt="{{ image.name }}">
+          
+          </li>
+        {% endif %}
+      {% endfor %}
+    </div>
   </ul>
 {% else %}
   <p>No images found.<br>Please upload an image to begin</p>
