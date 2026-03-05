@@ -107,7 +107,7 @@ class DashboardForm(forms.Form):
     )
 
 #VIEWS  
-# TODO rename to successImageUpload
+# TODO rename to successImageUpload and successUpload.html
 def uploadSuccess(request, context):
     return render(request, 'uploadSuccess.html', context)
 

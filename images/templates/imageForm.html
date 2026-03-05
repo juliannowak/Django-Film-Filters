@@ -1,25 +1,30 @@
 <!--the form html options:-->
 <head>
-    {% load django_bootstrap5 %}
-    {% bootstrap_css %}
-    {% bootstrap_javascript %}
-  <style>
-    .bold-select-box option:checked  {
-      font-weight: bold;
-    }
-    .bold-select-box option[value="1"]  {
-      font-weight: bold;
-    }
-    .bold-select-box option[value="2"]  {
-      font-weight: bold;
-    }
-  </style>
+  {% load django_bootstrap5 %}
+  {% bootstrap_css %}
+  {% bootstrap_javascript %}
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Django Film Filters{% endblock %}</title>
+  
+  <!-- SASS stylesheets go here in the head -->
+  {% load static %}
+  {% load sass_tags %}
+
+  <link href="{% static 'staticfiles/bootstrap.min.css' %}" rel="stylesheet" type="text/css"/>
+  <link href="{% sass_src 'staticfiles/main.scss' %}" rel="stylesheet" type="text/css" />  
+
 </head>
-<h3>Upload Page</h3>
-<form action="" method="post" class="row g-3 pb-4" enctype="multipart/form-data">
-{% csrf_token %}
-<br>
-<table>
+<body>
+  <h3>Upload Page</h3>
+  <form action="" method="post" class="row g-3 pb-4" enctype="multipart/form-data">
+  {% csrf_token %}
+  <br>
+  <table>
     {{ form.as_table }}
-</table>
-<input type="submit" value="Submit">
+  </table>
+  <input type="submit" value="Submit">
+
+  <script src="{% static 'staticfiles/main.js' %}"></script>
+</body>

@@ -38,7 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'images',
-    'django_bootstrap5'
+    'django_bootstrap5',
+    'sass_processor',
 ]
 
 MIDDLEWARE = [
@@ -116,8 +117,6 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
-STATIC_ROOT = '/static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media/'
 CLUT_DIR = BASE_DIR / 'CLUT'
@@ -126,3 +125,19 @@ CLUT_DIR = BASE_DIR / 'CLUT'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+#settings for SASS Processor
+SASS_PROCESSOR_ENABLED = True
+
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'static/'
+STATICFILES_DIRS = [
+   (BASE_DIR / 'staticfiles/')  # TODO project-wide static folder
+]
+
+SASS_PROCESSOR_ROOT = BASE_DIR / 'static/'
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'sass_processor.finders.CssFinder',
+]

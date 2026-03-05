@@ -1,5 +1,6 @@
 # Django-Film-Filters
 ### check it out here: http://138-128-247-76.cloud-xip.com/
+### mirror: http://cinefilmpalette.online/
 
 ## Local Self-Hosting:
 execute these statements line by line, or collapse them all (remove all comment lines and '\n' occurrences) and copy-paste the result into a bash shell.
@@ -47,4 +48,4 @@ python manage.py runserver;
 - remember DO NOT host with root account and disable root access when it is not needed
 
 ## TODOs:
-- BIG UI CHANGE INCOMING: move from page refreshes to AJAX
+- Implement fetch API
