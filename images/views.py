@@ -11,10 +11,6 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from .models import ImageUpload
 
-#BUGS
-#session key not found on first upload attempt
-#uploads from dashboard don't work
-#Color in film choices is a valid field
 
 def filtered_images(images):
     filtered = []
@@ -106,12 +102,12 @@ class DashboardForm(forms.Form):
         validators=[validate_boolean_list_string]
     )
 
-#VIEWS  
-# TODO rename to successImageUpload and successUpload.html
+#VIEWS
+# TODO add cookie message / or just remove if only dashboard
 def uploadSuccess(request, context):
     return render(request, 'uploadSuccess.html', context)
 
-# TODO rename to createImageUpload / create_image_upload
+# TODO rename to createImageUpload / or delete in favor of only dashboard
 def createImageForm(request):
     if request.method == 'POST':
         #make sure session key exists
@@ -184,6 +180,7 @@ def image_dashboard(request, session_key=None, switches=[]):
     return render(request, 'single.html', context)
 
 # TODO a view that dynamically changes filters applied on an image
+
 # TODO a script that auto cleans up database
 # def clean_up_old(): #by date arguement
 #     images = ImageUpload.objects.all
