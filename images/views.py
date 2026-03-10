@@ -83,9 +83,9 @@ class ImageUploadForm(forms.ModelForm):
         model = ImageUpload
         fields = ('image', 'name', 'film') # or list specific fields
         labels = {
-            "image" : "Image:",
-            "name": "Name (optional, just to keep record of original file name):",
-            "film": "Film (manadatory):"
+            "image" : "",
+            "name": "File Name:",
+            "film": "Film (needed):"
         }
         widgets = {
 	        "image" : forms.ClearableFileInput(attrs={'class':'form-control form-control-lg', 'placeholder':'images' }),

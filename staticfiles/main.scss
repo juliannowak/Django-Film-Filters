@@ -1,3 +1,80 @@
+$primary: rgba(232, 50, 131, 1);
+$secondary: rgba(57, 203, 251, 1);
+$info: white;
+$info-emphasis: lightgrey;
+$secondary-emphasis: rgba(65, 215, 167, 1);
+$primary-emphasis: #5d1434;
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 1rem;
+  line-height: 1.6;
+  font-weight: 400;
+  color: $info;
+  
+  background-color: $info; 
+  margin: 0;
+  padding: 50;
+  
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+
+  justify-content: center; /* Horizontal */
+  align-items: center;     /* Vertical */
+}
+
+form {
+  display: flex;
+  flex-direction: row;
+  gap: 10px; 
+  align-items: center;
+  justify-content: space-between; 
+  padding: 20px;
+  max-width: 800px;
+  margin: auto;
+
+  #id_image {
+    position: relative;
+    right: 140px;
+  }
+  
+  input {
+    border: 1px solid $info;
+    padding: 10px;
+    margin-bottom: 10px;
+    color: $info;
+    background-color: $primary-emphasis;
+    
+    &:focus {
+      border-color: darken($primary, 10%);
+    }
+  }
+
+  button {
+    background-color: $primary;
+    color: $info;
+    padding: 10px 15px;
+    border: none;
+    
+    
+    &:hover {
+      background-color: darken($primary, 5%);
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .form {
+    flex-direction: column; /* Stacks items vertically on small screens */
+    align-items: stretch;
+  }
+}
+
 .bold-select-box option:checked  {
     font-weight: bold;
 }
