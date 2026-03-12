@@ -5,7 +5,7 @@ import io
 import numpy as np
 from PIL import Image
 from django import forms
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.contrib.sessions.models import Session
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -103,12 +103,7 @@ class DashboardForm(forms.Form):
     )
 
 #VIEWS
-# TODO add cookie message / or just remove if only dashboard
-def uploadSuccess(request, context):
-    return render(request, 'uploadSuccess.html', context)
-
-# TODO rename to createImageUpload / or delete in favor of only dashboard
-def createImageForm(request):
+def createImageUpload(request):
     if request.method == 'POST':
         #make sure session key exists
         if not request.session.session_key:
@@ -123,27 +118,32 @@ def createImageForm(request):
             for filename, file in request.FILES.items(): #TODO FIX filename is the prop name, name is the file name
                 name = request.FILES[filename].name
                 open_image = Image.open(file) #TODO rename
-                filter_path = os.path.join(settings.CLUT_DIR, form.cleaned_data['film'])
+                film_choice = form.cleaned_data['film']
+                is_cleaned = os.path.exists(film_choice)
+                if not is_cleaned:
+                    break
+                filter_path = os.path.join(settings.CLUT_DIR, film_choice)
                 filter = Image.open((filter_path))
                 if "Black and White" in filter_path:
-                    print("yo")
                     filtered = apply_filter(filter, open_image.convert('L'), True)
                 else:
-                    print("no")
                     filtered = apply_filter(filter, open_image)
                 filtered_byte_arr = io.BytesIO()
                 filtered.save(filtered_byte_arr, format='PNG') # Or 'JPEG', etc.
                 filtered_byte_arr.seek(0) # Rewind to the beginning of the "file"
                 #put filtered file into db
                 instance.filtered.save("filtered%s" % name, filtered_byte_arr)
-            instance.save()
-            form.save()
-            return uploadSuccess(request, {'id': key}) # Redirect to a success page
+            if is_cleaned:
+                instance.save()
+                form.save()
+                return redirect('key_uploads', session_key=key) # Redirect to a success page
         else:
-            pass #redirect back to upload page
+            print("Invalid form data:", form.errors)
+            return redirect('images_create') #redirect back to upload page
     else:
         form = ImageUploadForm()
-        return render(request, 'imageForm.html', {'form': form})
+        
+    return render(request, 'imageForm.html', {'form': form})
 
 # TODO rename to displayImageDashboard
 def image_dashboard(request, session_key=None, switches=[]):
@@ -178,13 +178,3 @@ def image_dashboard(request, session_key=None, switches=[]):
                 'form': form
                 }
     return render(request, 'single.html', context)
-
-# TODO a view that dynamically changes filters applied on an image
-
-# TODO a script that auto cleans up database
-# def clean_up_old(): #by date arguement
-#     images = ImageUpload.objects.all
-#     for image in images:
-#         if image.date_created < date:
-#             #remove from DB
-#             pass
