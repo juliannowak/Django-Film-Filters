@@ -1,6 +1,5 @@
 # Django-Film-Filters
-### check it out here: http://138-128-247-76.cloud-xip.com/
-### mirror: http://cinefilmpalette.online/
+### check it out here: http://cinefilmpalette.online/
 
 ## Local Self-Hosting:
 execute these statements line by line, or collapse them all (remove all comment lines and '\n' occurrences) and copy-paste the result into a bash shell.
@@ -25,10 +24,10 @@ cd CLUT/Black\ and\ White
 find . -type f -exec mv -t . {} +;
 rmdir */
 cd ..; cd ..;
-#optional: if you want a donate page, remember to replace YOUR_ADDRESS with your BTC address.
+#optional: if you want a donate page, remember to replace $YOUR_ADDRESS with your BTC address.
 cd images/templates/ ;
 git clone https://github.com/nstevens1040/btcdonate.git;
-sed -i 's/3NHxJ9j1hBxqQGM9BNWXE9j1QLxxikhpGe/YOUR_ADDRESS/g' btcdonate/index.html;
+sed -i 's/3NHxJ9j1hBxqQGM9BNWXE9j1QLxxikhpGe/$YOUR_ADDRESS/g' btcdonate/index.html;
 cd ..; cd ..;
 #install an environment manager and set it up for the project
 sudo apt install miniconda3;
@@ -39,6 +38,7 @@ conda install django pillow numpy;
 python -m pip install django-bootstrap5;
 #start the server
 python manage.py migrate;
+python manage.py collectstatic;
 python manage.py runserver;
 
 ```
@@ -49,3 +49,5 @@ python manage.py runserver;
 
 ## TODOs:
 - Implement fetch API
+- Docker support
+- image2ascii support. add a blank file to CLUT folder and catch the filter

@@ -1,15 +1,14 @@
-
-import math
 import os
 import io
+import math
 import numpy as np
 from PIL import Image
 from django import forms
+from .models import ImageUpload
+from django.conf import settings
 from django.shortcuts import redirect, render
 from django.contrib.sessions.models import Session
-from django.conf import settings
 from django.core.exceptions import ValidationError
-from .models import ImageUpload
 
 
 def filtered_images(images):
@@ -103,7 +102,7 @@ class DashboardForm(forms.Form):
     )
 
 #VIEWS
-def createImageUpload(request):
+def image_upload(request):
     if request.method == 'POST':
         #make sure session key exists
         if not request.session.session_key:
@@ -177,4 +176,4 @@ def image_dashboard(request, session_key=None, switches=[]):
                 'switches': switches,
                 'form': form
                 }
-    return render(request, 'single.html', context)
+    return render(request, 'dashboard.html', context)

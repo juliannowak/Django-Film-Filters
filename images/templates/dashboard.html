@@ -6,6 +6,7 @@
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark light">
   <title>{% block title %}Django Film Filters{% endblock %}</title>
   
   <!-- SASS stylesheets go here in the head -->
@@ -53,12 +54,17 @@
 
   <h1>Upload Form</h1>
   <form action="" method="post" class="row g-3 pb-4" enctype="multipart/form-data">
-  {% csrf_token %}
-  <br>
-  <table>
-      {{ form.as_table }}
-  </table>
-  <input type="submit" value="Submit">
+    {% csrf_token %}
+    <br>
+    <table>
+        {{ form.as_table }}
+    </table>
+    <input type="submit" value="Submit">
+  </form>
 
+  <footer>
+    <p>Made by <a href="https://github.com/juliannowak/django-film-filters" target="_blank">Julian Nowak</a></p>
+    <!-- <a href="" target="_blank">Donate</a> -->
+  </footer>
   <script src="{% static 'main.js' %}"></script>
 </body>

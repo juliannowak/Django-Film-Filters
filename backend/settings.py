@@ -132,7 +132,7 @@ SASS_PROCESSOR_ENABLED = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'static/'
 STATICFILES_DIRS = [
-   (BASE_DIR / 'staticfiles/')  # TODO project-wide static folder
+   (BASE_DIR / 'staticfiles/')
 ]
 
 SASS_PROCESSOR_ROOT = BASE_DIR / 'static/'
