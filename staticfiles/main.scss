@@ -5,7 +5,11 @@ $info-emphasis: lightgrey;
 $secondary-emphasis: rgba(65, 215, 167, 1);
 $primary-emphasis: #5d1434;
 
-body, html {
+html {
+  background-color: linear-gradient(to right, $secondary, $primary) !important;
+}
+
+body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: clamp("1rem, 0.9rem + 0.5vw, 1.25rem");
   line-height: 1.6;
@@ -32,15 +36,15 @@ body, html {
 
 // app wrapper class to ensure the gradient background covers the entire viewport and stays fixed
 .app {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    /* Use vendor prefixes for older Android engines */
-    background: -webkit-linear-gradient(to right, red, blue) !important;
-    background: linear-gradient(to right, red, blue) !important;
-    z-index: -1;
+    // position: fixed;
+    // top: 0;
+    // left: 0;
+    // width: 100vw;
+    // height: 100vh;
+    // /* Use vendor prefixes for older Android engines */
+    // background: -webkit-linear-gradient(to right, $secondary, $primary) !important;
+    // background: linear-gradient(to right, $secondary, $primary) !important;
+    // z-index: -1;
 }
 
 form {
