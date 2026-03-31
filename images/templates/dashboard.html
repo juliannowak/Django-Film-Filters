@@ -18,53 +18,56 @@
 
 </head>
 <body>
-  {{ switches|json_script:"my-switches" }}
-  <h1>Your Image Dashboard/Gallery</h1><br>
-  {% if id %}
-    <p>Your ID: {{id}}</p>
-    <p>Keep this ID (or your link) if you want to find your images online again.</p>
-  {% endif %}
+  <div class="app">
+    {{ switches|json_script:"my-switches" }}
+    <h1>Your Image Dashboard/Gallery</h1><br>
+    {% if id %}
+      <p>Your ID: {{id}}</p>
+      <p>Keep this ID (or your link) if you want to find your images online again.</p>
+    {% endif %}
 
-  {% if context %}
-    <ul>
-      <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
-        Show Images
-      </button>
-      
-      <div class="collapse" id="collapseExample">
-        <p>Click or tap the images to sewitch between filtered and non-filtered</p>
-        {% for image, filtered, switch in context %}
-          {% if switch %}
-            <li>
-              <h4>Image #{{forloop.counter}} (filtered): {{ image.name }}</h4><br>
-              <img onclick="switchFilter('{{forloop.counter0}}', '{{switches}}')" width=480 src="{{ image.filtered.url }}" alt="{{ image.name }}">
-            </li>
-          {% else %}
-            <li>
-              <h4>Image #{{forloop.counter}} (unfiltered): {{ image.name }}</h4><br>
-              <img onclick="switchFilter('{{forloop.counter0}}', '{{switches}}')" width=480 src="{{ image.image.url }}" alt="{{ image.name }}">
-            </li>
-          {% endif %}
-        {% endfor %}
-      </div>
-    </ul>
-  {% else %}
-    <p>No images found.<br>Please upload an image to begin</p>
-  {% endif %}
+    {% if context %}
+      <ul>
+        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+          Show Images
+        </button>
+        
+        <div class="collapse" id="collapseExample">
+          <p>Click or tap the images to sewitch between filtered and non-filtered</p>
+          {% for image, filtered, switch in context %}
+            {% if switch %}
+              <li>
+                <h4>Image #{{forloop.counter}} (filtered): {{ image.name }}</h4><br>
+                <img onclick="switchFilter('{{forloop.counter0}}', '{{switches}}')" width=480 src="{{ image.filtered.url }}" alt="{{ image.name }}">
+              </li>
+            {% else %}
+              <li>
+                <h4>Image #{{forloop.counter}} (unfiltered): {{ image.name }}</h4><br>
+                <img onclick="switchFilter('{{forloop.counter0}}', '{{switches}}')" width=480 src="{{ image.image.url }}" alt="{{ image.name }}">
+              </li>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </ul>
+    {% else %}
+      <p>No images found.<br>Please upload an image to begin</p>
+    {% endif %}
 
-  <h1>Upload Form</h1>
-  <form action="" method="post" class="row g-3 pb-4" enctype="multipart/form-data">
-    {% csrf_token %}
-    <br>
-    <table>
-        {{ form.as_table }}
-    </table>
-    <input type="submit" value="Submit">
-  </form>
+    <h1>Upload Form</h1>
+    <form action="" method="post" class="row g-3 pb-4" enctype="multipart/form-data">
+      {% csrf_token %}
+      <br>
+      <table>
+          {{ form.as_table }}
+      </table>
+      <input type="submit" value="Submit">
+    </form>
 
-  <footer>
-    <p>Made by <a href="https://github.com/juliannowak/django-film-filters" target="_blank">Julian Nowak</a></p>
-    <!-- <a href="" target="_blank">Donate</a> -->
-  </footer>
+    <footer>
+      <p>Made by <a href="https://github.com/juliannowak/django-film-filters" target="_blank">Julian Nowak</a></p>
+      <!-- <a href="" target="_blank">Donate</a> -->
+    </footer>
+  </div>
+  
   <script src="{% static 'main.js' %}"></script>
 </body>

@@ -18,13 +18,16 @@
 
 </head>
 <body>
-  <form action="" method="post" class="row g-3 pb-4" enctype="multipart/form-data">
-  {% csrf_token %}
-  <br>
-  <table>
-    {{ form.as_table }}
-  </table>
-  <input type="submit" value="Submit">
+  <div class="app">
+    <form action="" method="post" class="row g-3 pb-4" enctype="multipart/form-data">
+    {% csrf_token %}
+    <br>
+    <table>
+      {{ form.as_table }}
+    </table>
+    <input type="submit" value="Submit">
+    </form>
+  </div>
 
   <script src="{% static 'main.js' %}"></script>
 </body>
