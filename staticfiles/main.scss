@@ -6,7 +6,7 @@ $secondary-emphasis: rgba(65, 215, 167, 1);
 $primary-emphasis: #5d1434;
 
 html {
-  background-color: linear-gradient(to right, $secondary, $primary) !important;
+  background: linear-gradient(to right, $secondary, $primary) !important;
 }
 
 body {
