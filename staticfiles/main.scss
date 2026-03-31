@@ -12,7 +12,8 @@ body {
   font-weight: 400;
   color: $info;
   
-  background-color: $info; 
+  //background-color: $info;
+  background: linear-gradient(135deg, $secondary, $primary);
   margin: 0;
   padding: clamp("20px, 5%, 50px");
   
