@@ -7,7 +7,7 @@ $primary-emphasis: #5d1434;
 
 body html {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: clamp(1rem, 0.9rem + 0.5vw, 1.25rem);
+  font-size: clamp("1rem, 0.9rem + 0.5vw, 1.25rem");
   line-height: 1.6;
   font-weight: 400;
   color: $info;
@@ -24,7 +24,7 @@ body html {
     background: -webkit-linear-gradient(90deg, #39cbfb, #e83283) !important;
     background: linear-gradient(90deg, #39cbfb, #e83283) !important;
     margin: 0;
-    padding: clamp(20px, 5%, 50px);
+    padding: clamp("20px, 5%, 50px");
     
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
