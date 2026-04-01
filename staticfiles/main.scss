@@ -20,9 +20,8 @@ body html {
     min-height: 100vh;
     width: 100%;
     z-index: -1;
-    /* Use 'background' to cover all bases */
-    // background: -webkit-linear-gradient(90deg, $secondary, $primary) !important;
-    // background: linear-gradient(90deg, $secondary, $primary) !important;
+    background: -webkit-linear-gradient(90deg, $secondary, $primary) !important;
+    background: linear-gradient(90deg, $secondary, $primary) !important;
     margin: 0;
     padding: clamp("20px, 5%, 50px");
     
