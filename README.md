@@ -50,4 +50,5 @@ python manage.py runserver;
 ## TODOs:
 - Implement fetch API
 - Docker support
+- pre_deploy script fix secret_key generation
 - image2ascii support. add a blank file to CLUT folder and catch the filter
