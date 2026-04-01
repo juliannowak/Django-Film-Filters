@@ -21,8 +21,8 @@ body html {
     width: 100%;
     z-index: -1;
     /* Use 'background' to cover all bases */
-    background: -webkit-linear-gradient(90deg, #39cbfb, #e83283) !important;
-    background: linear-gradient(90deg, #39cbfb, #e83283) !important;
+    // background: -webkit-linear-gradient(90deg, $secondary, $primary) !important;
+    // background: linear-gradient(90deg, $secondary, $primary) !important;
     margin: 0;
     padding: clamp("20px, 5%, 50px");
     
