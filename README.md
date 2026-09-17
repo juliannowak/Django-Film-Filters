@@ -24,10 +24,10 @@ cd CLUT/Black\ and\ White
 find . -type f -exec mv -t . {} +;
 rmdir */
 cd ..; cd ..;
-#optional: if you want a donate page, remember to replace $YOUR_ADDRESS with your BTC address.
+#optional: if you want a donate page, remember to replace $YOUR_BTC_ADDRESS with your BTC address.
 cd images/templates/ ;
-git clone https://github.com/nstevens1040/btcdonate.git;
-sed -i 's/3NHxJ9j1hBxqQGM9BNWXE9j1QLxxikhpGe/$YOUR_ADDRESS/g' btcdonate/index.html;
+sed -i 's/YOUR_BITCOIN_ADDRESS/$YOUR_BTC_ADDRESS/g' donate.html;
+#repeat for other addresses ETH and LTC
 cd ..; cd ..;
 #install an environment manager and set it up for the project
 sudo apt install miniconda3;

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donate Crypto</title>
+    
+    <!-- Ultra-reliable production CDN for the QR Code library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            text-align: center;
+            background: #f8f9fa;
+            color: #212529;
+            padding: 2rem 1rem;
+            margin: 0;
+        }
+        main {
+            max-width: 440px;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        .crypto-tabs {
+            display: flex;
+            gap: 8px;
+            margin: 1.5rem 0;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #dee2e6;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+        .tab-btn.active {
+            border-color: #0d6efd;
+            background: #e7f1ff;
+            color: #0d6efd;
+        }
+        .crypto-panel {
+            display: none;
+        }
+        .crypto-panel.active {
+            display: block;
+        }
+        .qr-box {
+            display: flex;
+            justify-content: center;
+            margin: 1.5rem 0;
+            min-height: 160px;
+        }
+        .qr-box img {
+            padding: 8px;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+        }
+        .address-box {
+            background: #f1f3f5;
+            padding: 12px;
+            border-radius: 8px;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 0.9rem;
+            border: 1px solid #dee2e6;
+            margin-bottom: 1rem;
+        }
+        .wallet-btn {
+            display: inline-block;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .btc-theme { background: #f7931a; }
+        .btc-theme:hover { background: #e17e0a; }
+        .eth-theme { background: #627eea; }
+        .eth-theme:hover { background: #4d66d1; }
+        .ltc-theme { background: #345d9d; }
+        .ltc-theme:hover { background: #27487b; }
+    </style>
+</head>
+<body>
+
+    <main>
+        <h1>Support Our Work</h1>
+        <p>Select your preferred cryptocurrency to make a donation.</p>
+
+        <div class="crypto-tabs">
+            <button class="tab-btn active" onclick="switchCrypto(event, 'btc')">Bitcoin</button>
+            <button class="tab-btn" onclick="switchCrypto(event, 'eth')">Ethereum</button>
+            <button class="tab-btn" onclick="switchCrypto(event, 'ltc')">Litecoin</button>
+        </div>
+
+        <!-- BITCOIN PANEL -->
+        <div id="panel-btc" class="crypto-panel active">
+            <div id="qr-btc" class="qr-box"></div>
+            <div class="address-box" id="addr-btc">YOUR_BITCOIN_ADDRESS</div>
+            <a href="bitcoin:YOUR_BITCOIN_ADDRESS" class="wallet-btn btc-theme">Open BTC Wallet</a>
+        </div>
+
+        <!-- ETHEREUM PANEL -->
+        <div id="panel-eth" class="crypto-panel">
+            <div id="qr-eth" class="qr-box"></div>
+            <div class="address-box" id="addr-eth">YOUR_ETHEREUM_ADDRESS</div>
+            <a href="ethereum:YOUR_ETHEREUM_ADDRESS" class="wallet-btn eth-theme">Open ETH Wallet</a>
+        </div>
+
+        <!-- LITECOIN PANEL -->
+        <div id="panel-ltc" class="crypto-panel">
+            <div id="qr-ltc" class="qr-box"></div>
+            <div class="address-box" id="addr-ltc">YOUR_LITECOIN_ADDRESS</div>
+            <a href="litecoin:YOUR_LITECOIN_ADDRESS" class="wallet-btn ltc-theme">Open LTC Wallet</a>
+        </div>
+    </main>
+
+    <script>
+        // CONFIGURATION: Replace placeholders with your real crypto addresses
+        const walletAddresses = {
+            btc: 'YOUR_BITCOIN_ADDRESS',
+            eth: 'YOUR_ETHEREUM_ADDRESS', 
+            ltc: 'YOUR_LITECOIN_ADDRESS'  
+        };
+
+        function switchCrypto(event, ticker) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.crypto-panel').forEach(panel => panel.classList.remove('active'));
+            
+            event.currentTarget.classList.add('active');
+            document.getElementById(`panel-${ticker}`).classList.add('active');
+        }
+
+        // FORCE compilation to pause until the network assets have definitively loaded
+        window.onload = function() {
+            Object.keys(walletAddresses).forEach(ticker => {
+                const address = walletAddresses[ticker];
+                const qrElement = document.getElementById(`qr-${ticker}`);
+                
+                if (address && !address.includes('YOUR_')) {
+                    document.getElementById(`addr-${ticker}`).innerText = address;
+                    document.querySelector(`#panel-${ticker} .wallet-btn`).setAttribute('href', `${getScheme(ticker)}:${address}`);
+
+                    // Safely initialize now that script exposure is guaranteed
+                    new QRCode(qrElement, {
+                        text: `${getScheme(ticker)}:${address}`,
+                        width: 160,
+                        height: 160,
+                        colorDark: "#000000",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+                } else {
+                    qrElement.innerHTML = "<p style='font-size:0.85rem;color:#868e96;margin:auto;'>Please replace placeholder with your actual address in the code setup to generate this QR Code.</p>";
+                }
+            });
+        };
+
+        function getScheme(ticker) {
+            if (ticker === 'eth') return 'ethereum';
+            if (ticker === 'ltc') return 'litecoin';
+            return 'bitcoin';
+        }
+    </script>
+
+</body>
+</html>
