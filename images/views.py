@@ -177,3 +177,6 @@ def image_dashboard(request, session_key=None, switches=[]):
                 'form': form
                 }
     return render(request, 'dashboard.html', context)
+
+def donate(request):
+    return render(request, 'donate.html')

@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    {% load django_bootstrap5 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Donate Crypto</title>
@@ -8,19 +12,18 @@
     <!-- Ultra-reliable production CDN for the QR Code library -->
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
+    <!-- SASS stylesheets go here in the head -->
+    {% load static %}
+    {% load sass_tags %}
+    <link href="{% static 'bootstrap.min.css' %}" rel="stylesheet" type="text/css"/>
+    <link href="{% sass_src 'main.scss' %}" rel="stylesheet" type="text/css" />  
+
     <style>
-        body {
-            font-family: system-ui, -apple-system, sans-serif;
-            text-align: center;
-            background: #f8f9fa;
-            color: #212529;
-            padding: 2rem 1rem;
-            margin: 0;
-        }
+        
         main {
             max-width: 440px;
             margin: 0 auto;
-            background: white;
+            background: transparent;
             padding: 2rem;
             border-radius: 16px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.08);
@@ -72,6 +75,7 @@
             font-size: 0.9rem;
             border: 1px solid #dee2e6;
             margin-bottom: 1rem;
+            color: black;
         }
         .wallet-btn {
             display: inline-block;
@@ -87,20 +91,17 @@
         .btc-theme:hover { background: #e17e0a; }
         .eth-theme { background: #627eea; }
         .eth-theme:hover { background: #4d66d1; }
-        .ltc-theme { background: #345d9d; }
-        .ltc-theme:hover { background: #27487b; }
     </style>
 </head>
 <body>
 
     <main>
-        <h1>Support Our Work</h1>
+        <h1>Support My Work</h1>
         <p>Select your preferred cryptocurrency to make a donation.</p>
 
         <div class="crypto-tabs">
             <button class="tab-btn active" onclick="switchCrypto(event, 'btc')">Bitcoin</button>
             <button class="tab-btn" onclick="switchCrypto(event, 'eth')">Ethereum</button>
-            <button class="tab-btn" onclick="switchCrypto(event, 'ltc')">Litecoin</button>
         </div>
 
         <!-- BITCOIN PANEL -->
@@ -116,21 +117,13 @@
             <div class="address-box" id="addr-eth">YOUR_ETHEREUM_ADDRESS</div>
             <a href="ethereum:YOUR_ETHEREUM_ADDRESS" class="wallet-btn eth-theme">Open ETH Wallet</a>
         </div>
-
-        <!-- LITECOIN PANEL -->
-        <div id="panel-ltc" class="crypto-panel">
-            <div id="qr-ltc" class="qr-box"></div>
-            <div class="address-box" id="addr-ltc">YOUR_LITECOIN_ADDRESS</div>
-            <a href="litecoin:YOUR_LITECOIN_ADDRESS" class="wallet-btn ltc-theme">Open LTC Wallet</a>
-        </div>
     </main>
 
     <script>
         // CONFIGURATION: Replace placeholders with your real crypto addresses
         const walletAddresses = {
             btc: 'YOUR_BITCOIN_ADDRESS',
-            eth: 'YOUR_ETHEREUM_ADDRESS', 
-            ltc: 'YOUR_LITECOIN_ADDRESS'  
+            eth: 'YOUR_ETHEREUM_ADDRESS',  
         };
 
         function switchCrypto(event, ticker) {
@@ -168,7 +161,6 @@
 
         function getScheme(ticker) {
             if (ticker === 'eth') return 'ethereum';
-            if (ticker === 'ltc') return 'litecoin';
             return 'bitcoin';
         }
     </script>
