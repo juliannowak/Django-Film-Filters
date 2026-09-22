@@ -180,3 +180,6 @@ def image_dashboard(request, session_key=None, switches=[]):
 
 def donate(request):
     return render(request, 'donate.html')
+
+def about(request):
+    return render(request, 'about.html')
