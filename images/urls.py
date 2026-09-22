@@ -9,5 +9,6 @@ urlpatterns = [
     path('', views.image_upload,  name='images_create'),
     path('donate/', views.donate, name='donate'),
     path('about/', views.about, name='about'),
+    path('clut/', views.clut, name='clut'),
     #path('images/<str:session_key>/delete/<str:image_name>/', views.delete_image, name='delete_image'),
 ]

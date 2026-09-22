@@ -4,12 +4,12 @@ import math
 import numpy as np
 from PIL import Image
 from django import forms
-from .models import ImageUpload
+from .models import ImageUpload, CLUTUpload
 from django.conf import settings
 from django.shortcuts import redirect, render
 from django.contrib.sessions.models import Session
 from django.core.exceptions import ValidationError
-
+from django.utils.safestring import mark_safe
 
 def filtered_images(images):
     filtered = []
@@ -101,7 +101,30 @@ class DashboardForm(forms.Form):
         validators=[validate_boolean_list_string]
     )
 
+class UploadCLUTForm(forms.ModelForm):
+    session_key = forms.CharField(max_length=200)
+    class Meta:
+        model = CLUTUpload
+        fields = ('image', 'film', 'exposure', 'info',) # or list specific fields
+        labels = {
+            "image" : "",
+            "film": mark_safe("Name of the film stock<br />(example: Fuji Superia 400):"),
+            "exposure": mark_safe("Exposure in f-stops<br />(examples: -1, 0, +1, +2, -0.5, etc...):"),
+            "info": "Any additional information:"
+        }
+        widgets = {
+            "image" : forms.ClearableFileInput(attrs={'class':'form-control form-control-lg', 'placeholder':'images' }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['film'].widget.attrs['class'] = 'bold-select-box'
+
+class ApplyCLUTForm(forms.Form):
+    session_key = forms.CharField(max_length=200)
+
 #VIEWS
+#TODO write a generic view that takes a Form class and redirect page as arguments and returns a view function that handles the form submission and redirects to the specified page on success. This will reduce code duplication for similar form handling views.
 def image_upload(request):
     if request.method == 'POST':
         #make sure session key exists
@@ -177,6 +200,29 @@ def image_dashboard(request, session_key=None, switches=[]):
                 'form': form
                 }
     return render(request, 'dashboard.html', context)
+
+def clut(request):
+    if request.method == 'POST':
+        #make sure session key exists
+        if not request.session.session_key:
+            request.session.save()
+        key = request.session.session_key
+        #instatiate form
+        form = UploadCLUTForm(request.POST, request.FILES)
+        if form.is_valid():
+            instance = form.save(commit=False) # Don't save yet
+            instance.session_key =  Session.objects.get(session_key=key) # Auto-populate 'user' field with current user
+            # TODO check if the uploaded CLUT file is actually a CLUT
+            instance.save()
+            form.save()
+            return redirect('clut') #TODO Redirect to a success page
+        else:
+            print("Invalid form data:", form.errors)
+            return redirect('clut') #redirect back to clut upload page
+    else:
+        form = UploadCLUTForm()
+        
+    return render(request, 'imageForm.html', {'form': form})
 
 def donate(request):
     return render(request, 'donate.html')
