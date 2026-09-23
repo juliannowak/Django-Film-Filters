@@ -28,9 +28,11 @@ cd ..; cd ..;
 cd images/templates/ ;
 sed -i 's/YOUR_BITCOIN_ADDRESS/$YOUR_BTC_ADDRESS/g' donate.html;
 #repeat for other addresses ETH and LTC
-#optinal: if you want to leave an email
+#optional: if you want to leave an email
 sed -i 's/YOUR_EMAIL_ADDRESS/$YOUR_EMAIL_ADDRESS/g' about.html;
 cd ..; cd ..;
+#install prerequisite for creating CLUTs
+sudo apt install gmic
 #install an environment manager and set it up for the project
 sudo apt install miniconda3;
 conda create -n django-environment;
@@ -52,7 +54,7 @@ python manage.py runserver;
 ## TODOs:
 - Implement fetch API
 - Docker support
-- pre_deploy script fix secret_key generation
-- image2ascii support. add a blank file to CLUT folder and catch the filter
+- pre_deploy script - fix secret_key generation
+- image2ascii support - add a blank file to CLUT folder and catch the filter
 - make a footer
 - clut generation script

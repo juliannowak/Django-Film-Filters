@@ -4,9 +4,9 @@ from pathlib import Path
 from django.http import HttpResponse
 
 urlpatterns = [
-    path('images/<str:session_key>/', views.image_dashboard, name='key_uploads'),
-    path('images/', views.image_dashboard, name='session_uploads'),
-    path('', views.image_upload,  name='images_create'),
+    path('images/<str:session_key>/', views.display_images, name='key_uploads'),
+    path('images/', views.display_images, name='session_uploads'),
+    path('', views.upload_image,  name='images_create'),
     path('donate/', views.donate, name='donate'),
     path('about/', views.about, name='about'),
     path('clut/', views.clut, name='clut'),

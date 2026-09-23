@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<head>
+  {% load django_bootstrap5 %}
+  {% bootstrap_css %}
+  {% bootstrap_javascript %}
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark light">
+  <title>{% block title %}Django Film Filters{% endblock %}</title>
+  
+  <!-- SASS stylesheets go here in the head -->
+  {% load static %}
+  {% load sass_tags %}
+  <link href="{% static 'bootstrap.min.css' %}" rel="stylesheet" type="text/css"/>
+  <link href="{% sass_src 'main.scss' %}" rel="stylesheet" type="text/css" />
+
+</head>
+<body>
+    <h1>{{error}}</h1>
+<p></p>
+</body>

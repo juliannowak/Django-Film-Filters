@@ -10,6 +10,7 @@ from django.shortcuts import redirect, render
 from django.contrib.sessions.models import Session
 from django.core.exceptions import ValidationError
 from django.utils.safestring import mark_safe
+from pathlib import Path
 
 def filtered_images(images):
     filtered = []
@@ -76,8 +77,79 @@ def validate_film_choice(value):
     if value == "Color" or value == "Black and White":
         pass #TODO redirect back to create page
 
+def is_not_single_color(image: Image.Image, tolerance: int = 8, min_unique_colors: int = 10) -> bool:
+    """
+    Return True if the image is not essentially one solid color.
+    Works for both color and grayscale HaldCLUTs.
+    """
+    img = image.convert("RGB")
+    pixels = list(img.getdata())
+
+    if not pixels:
+        return False
+
+    # Sample a manageable number of pixels to keep this fast
+    step = max(1, len(pixels) // 20000)
+    sampled = pixels[::step]
+
+    if len(sampled) < 2:
+        return False
+
+    r = [p[0] for p in sampled]
+    g = [p[1] for p in sampled]
+    b = [p[2] for p in sampled]
+
+    # If all sampled pixels are nearly identical, reject it as a single-color image
+    if (
+        max(r) - min(r) < tolerance
+        and max(g) - min(g) < tolerance
+        and max(b) - min(b) < tolerance
+    ):
+        return False
+
+    # Extra sanity check: require some color diversity
+    if len(set(sampled)) < min_unique_colors:
+        return False
+
+    return True
+
+def is_haldclut(file_path: str | Path) -> bool:
+    """
+    Return True if the file appears to be a valid HaldCLUT image.
+    Checks:
+      - file exists
+      - image opens successfully
+      - image is square
+      - side length is a perfect cube (n^3)
+      - not a flat/solid image
+    """
+    try:
+        path = Path(file_path)
+        if not path.is_file():
+            return False
+
+        with Image.open(path) as img:
+            img = img.convert("RGB")
+
+            width, height = img.size
+            if width != height:
+                return False
+
+            # HaldCLUT side length must be n^3
+            n = round(width ** (1 / 3))
+            if n < 2 or (n ** 3) != width:
+                return False
+
+            # Reject one-color/near-one-color HaldCLUTs
+            if not is_not_single_color(img):
+                return False
+
+        return True
+
+    except Exception:
+        return False
 #FORMS    
-class ImageUploadForm(forms.ModelForm):
+class UploadImageForm(forms.ModelForm):
     class Meta:
         model = ImageUpload
         fields = ('image', 'name', 'film') # or list specific fields
@@ -94,7 +166,7 @@ class ImageUploadForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['film'].widget.attrs['class'] = 'bold-select-box'
 
-class DashboardForm(forms.Form):
+class DisplayImagesForm(forms.Form):
     session_key = forms.CharField(max_length=200)
     switches_string = forms.CharField(
         label="List of boolean 'switches' (comma-separated)",
@@ -102,37 +174,37 @@ class DashboardForm(forms.Form):
     )
 
 class UploadCLUTForm(forms.ModelForm):
-    session_key = forms.CharField(max_length=200)
     class Meta:
         model = CLUTUpload
         fields = ('image', 'film', 'exposure', 'info',) # or list specific fields
         labels = {
             "image" : "",
             "film": mark_safe("Name of the film stock<br />(example: Fuji Superia 400):"),
-            "exposure": mark_safe("Exposure in f-stops<br />(examples: -1, 0, +1, +2, -0.5, etc...):"),
+            "exposure": mark_safe("Exposure in f-stops<br />(examples: -1, 0, +1, +2, -0.5):"),
             "info": "Any additional information:"
         }
         widgets = {
             "image" : forms.ClearableFileInput(attrs={'class':'form-control form-control-lg', 'placeholder':'images' }),
+            'exposure': forms.NumberInput(attrs={'class': 'no-spinners'}),
         }
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['film'].widget.attrs['class'] = 'bold-select-box'
 
-class ApplyCLUTForm(forms.Form):
+#TODO takes one or optionally two images and extracts a CLUT from the difference between them usng extract_CLUT.sh
+# if only one image is passed, it will use the default image provided as the second image to extract the CLUT from
+class CreateCLUTForm(forms.Form):
     session_key = forms.CharField(max_length=200)
 
 #VIEWS
-#TODO write a generic view that takes a Form class and redirect page as arguments and returns a view function that handles the form submission and redirects to the specified page on success. This will reduce code duplication for similar form handling views.
-def image_upload(request):
+def upload_image(request):
     if request.method == 'POST':
         #make sure session key exists
         if not request.session.session_key:
             request.session.save()
         key = request.session.session_key
         #instatiate form
-        form = ImageUploadForm(request.POST, request.FILES)
+        form = UploadImageForm(request.POST, request.FILES)
         if form.is_valid():
             instance = form.save(commit=False) # Don't save yet
             instance.session_key =  Session.objects.get(session_key=key) # Auto-populate 'user' field with current user
@@ -163,12 +235,42 @@ def image_upload(request):
             print("Invalid form data:", form.errors)
             return redirect('images_create') #redirect back to upload page
     else:
-        form = ImageUploadForm()
+        form = UploadImageForm()
         
     return render(request, 'imageForm.html', {'form': form})
 
-# TODO rename to displayImageDashboard
-def image_dashboard(request, session_key=None, switches=[]):
+#TODO use this instead of image_upload and clut views
+def generic_image_upload(request, form_class, redirect_to):
+    """
+    Generic view for handling a ModelForm upload.
+
+    Args:
+        request: The Django request object.
+        form_class: The form class to instantiate.
+        redirect_to: A Django URL name or URL to redirect to after success.
+    """
+    if not request.session.session_key:
+        request.session.save()
+
+    key = request.session.session_key
+
+    if request.method == "POST":
+        form = form_class(request.POST, request.FILES)
+
+        if form.is_valid():
+            instance = form.save(commit=False)
+            instance.session_key = Session.objects.get(session_key=key)
+            instance.save()
+
+            return redirect(redirect_to)
+
+        print("Invalid form data:", form.errors)
+    else:
+        form = form_class()
+
+    return render(request, "imageForm.html", {"form": form})
+
+def display_images(request, session_key=None, switches=[]):
     if request.method == "GET":
         key = request.GET.get('key', '')
         switches = request.GET.get('switches', [])
@@ -190,7 +292,7 @@ def image_dashboard(request, session_key=None, switches=[]):
         switches = string_to_boolean_list(switches)
         
     #create context and render form
-    form = ImageUploadForm()
+    form = UploadImageForm()
     all = list(zip(key_images, filtered, switches))
     #print(list(all))
     #TODO add film context far that parses path under image.film into the name of the film filter used
@@ -213,17 +315,49 @@ def clut(request):
             instance = form.save(commit=False) # Don't save yet
             instance.session_key =  Session.objects.get(session_key=key) # Auto-populate 'user' field with current user
             # TODO check if the uploaded CLUT file is actually a CLUT
-            instance.save()
-            form.save()
-            return redirect('clut') #TODO Redirect to a success page
+            if not is_haldclut(instance.image):
+                print("Uploaded file is not a valid HaldCLUT.")
+                return redirect('clut') #TODO redirect to error page
+            else:
+                print("Uploaded file is a valid HaldCLUT.")
+                instance.save()
+                form.save()
+                return redirect('clut') #TODO Redirect to a success page
         else:
             print("Invalid form data:", form.errors)
-            return redirect('clut') #redirect back to clut upload page
+            return redirect('clut') #TODO redirect to error page
     else:
         form = UploadCLUTForm()
         
     return render(request, 'imageForm.html', {'form': form})
 
+def create_clut(request):
+    if request.method == 'POST':
+        #make sure session key exists
+        if not request.session.session_key:
+            request.session.save()
+        key = request.session.session_key
+        #instatiate form
+        form = UploadCLUTForm(request.POST, request.FILES)
+        if form.is_valid():
+            instance = form.save(commit=False) # Don't save yet
+            instance.session_key =  Session.objects.get(session_key=key) # Auto-populate 'user' field with current user
+            # TODO check if the uploaded CLUT file is actually a CLUT
+            if not is_haldclut(instance.image):
+                print("Uploaded file is not a valid HaldCLUT.")
+                return redirect('clut') #TODO redirect to error page
+            else:
+                print("Uploaded file is a valid HaldCLUT.")
+                instance.save()
+                form.save()
+                return redirect('clut') #TODO Redirect to a success page
+        else:
+            print("Invalid form data:", form.errors)
+            return redirect('clut') #TODO redirect to error page
+    else:
+        form = UploadCLUTForm()
+        
+    return render(request, 'imageForm.html', {'form': form})
 def donate(request):
     return render(request, 'donate.html')
 

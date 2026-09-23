@@ -1,12 +1,12 @@
 # models.py
 
 from django.db import models
+from django.core.exceptions import ValidationError
 from django.contrib.sessions.models import Session
 from django.conf import settings
 import glob
 import os
 
-from django.core.exceptions import ValidationError
 
 def session_directory_path(instance, filename): 
     return os.path.join('session', str(instance.session_key), filename)
@@ -41,14 +41,15 @@ class ImageUpload(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
+        
         return f'{self.name}'
 
 class CLUTUpload(models.Model):
-    image = models.ImageField(upload_to='clut/uploads/')
+    image = models.ImageField(upload_to='CLUT/user_uploads/')
     created_at = models.DateTimeField(auto_now_add=True)
     film = models.CharField(max_length=200, blank=False, null=False, default=None)
     exposure = models.FloatField()
     info = models.CharField(max_length=200)
 
     def __str__(self):
-        return f'{self.film} - {self.exposure}'
+        return f'{self.film} {self.exposure}'
