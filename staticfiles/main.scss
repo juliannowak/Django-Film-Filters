@@ -14,6 +14,51 @@ body html {
   // background-color: transparent !important;
 }
 
+footer {
+    display: flex;
+    /* 1. Changed to row so items sit side-by-side */
+    flex-direction: row; 
+    align-items: center;
+    justify-content: center;
+    /* 2. Reduced gap slightly to account for padding around the bars */
+    gap: 15px; 
+    margin-top: 20px;
+    padding: 20px;
+    font-size: #{"clamp(0.8rem, 0.7rem + 0.5vw, 1rem)"};
+    
+    a {
+        text-decoration: none;
+        color: $primary-emphasis;
+        display: inline-flex;
+        align-items: center;
+
+        /* 3. Target every link EXCEPT the very last one */
+        &:not(:last-child)::after {
+            /* 4. This creates the vertical bar separator */
+            content: "|"; 
+            /* 5. Pushes the bar perfectly between the links */
+            margin-left: 15px; 
+            /* 6. Makes the bar slightly translucent so it doesn't look harsh */
+            opacity: 0.5; 
+            color: $primary-emphasis;
+        }
+    }
+
+    &:hover {
+    color: $secondary-emphasis;
+    }
+}
+
+
+footer a {
+  font-weight: bold;
+  font-size: 1.2em;
+  text-decoration: none;
+  color: $primary-emphasis;
+  
+  
+}
+
 // app wrapper class to ensure the gradient background covers the entire viewport and stays fixed
 .app {
     position: fixed;

@@ -15,7 +15,6 @@
     <link href="{% sass_src 'main.scss' %}" rel="stylesheet" type="text/css" />
 </head>
 <body>
-    <h1>CLUT Generator</h1>
     <!-- <p>To generate a HaldCLUT file all you need to is two pictures, the target picture you want 
         to clone the look of, and a regular unedited picture version of the same picture.
         If you are using a camara to take the regular unedited picture, RAW mode is preffered.
@@ -27,21 +26,40 @@
 
         <br> -->
 
-<h1>📝 Contributor Instructions: Creating a HaldCLUT from Film</h1>
-To generate an accurate HaldCLUT file, our software needs to compare two photos of the exact same scene: the target picture (the look you want to clone) and a neutral reference picture (the baseline).
-If you want to capture the look of a specific film stock to contribute to our project, please follow these guidelines:
-<h3>1. The Two Required Images</h3>
-<br>
-* The Target Image: This is your original, unedited film scan showcasing the exact colors and contrast you want to capture.
-* The Reference Image: This is a photo of the exact same scene taken on your phone or digital camera under identical lighting conditions.
-<br>
-<h3>2. Shooting Guidelines for Best Results</h3>
-<br>
-* 📸 Use RAW Mode: If you are using a digital camera or smartphone for the reference photo, RAW mode is highly preferred. This prevents the camera's internal software from adding forced contrast or color shifts.
-* 📊 Use a Color Chart (Highly Recommended): For the absolute best results, include a printed or physical color chart (like an X-Rite/Calibrite passport) in the center of both frames.
-* 🔒 Lock Your Settings: Turn off Auto White Balance (AWB) and Auto Exposure on your digital camera or phone. Keep the settings fixed so they match the natural lighting of the film shot.
-* 🧍 Keep it Static: Avoid moving subjects (like traffic or swaying trees) and shoot from the exact same angle. The two images must align as perfectly as possible.
-<br>
-Thank you! Your submissions directly help us provide more accurate, high-quality HaldCLUTs to creators around the world.
+  <div class="app">
+    <h1>📝 Contributor Instructions: Creating a HaldCLUT from Film</h1>
+    To generate an accurate HaldCLUT file, our software needs to compare two photos of the exact same scene: the target picture (the look you want to clone) and a neutral reference picture (the baseline).
+    If you want to capture the look of a specific film stock to contribute to our project, please follow these guidelines:
+    <br><br>
+    <h4>1. The Two Required Images</h4>
+    * The Target Image: This is your original, unedited film scan showcasing the exact colors and contrast you want to capture.
+    <br>
+    * The Reference Image: This is a photo of the exact same scene taken on your phone or digital camera under identical lighting conditions.
+    <br>
+    <h4>2. Shooting Guidelines for Best Results</h4>
+    * 📸 Use RAW Mode: If you are using a digital camera or smartphone for the reference photo, RAW mode is highly preferred. This prevents the camera's internal software from adding forced contrast or color shifts.
+    <br>
+    * 📊 Use a Color Chart (Highly Recommended): For the absolute best results, include a printed or physical color chart (like an X-Rite/Calibrite passport) in the center of both frames.
+    <br>
+    * 🔒 Lock Your Settings: Turn off Auto White Balance (AWB) and Auto Exposure on your digital camera or phone. Keep the settings fixed so they match the natural lighting of the film shot.
+    <br>
+    * 🧍 Keep it Static: Avoid moving subjects (like traffic or swaying trees) and shoot from the exact same angle. The two images must align as perfectly as possible.
+    <br>
+    Thank you! Your submissions directly help us provide more accurate, high-quality HaldCLUTs to creators around the world.
 
+    <form action="" method="post" class="row g-3 pb-4" enctype="multipart/form-data">
+    {% csrf_token %}
+    <br>
+    <table>
+      {{ form.as_table }}
+    </table>
+    <input type="submit" value="Submit">
+    </form>
+
+    <footer>
+      <a href="/about">🎞️ Help Us Grow: Contribute Your Own Film Styles</a>
+      <a href="/donate">💸 Help Me Grow: Donate</a>
+      <a href="https://github.com/juliannowak/Django-Film-Filters">⌨️ Check Out The Project On GitHub</a>
+    </footer>
+  </div>
 </body>

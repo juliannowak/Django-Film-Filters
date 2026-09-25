@@ -1,15 +1,22 @@
+from logging import info
 import os
 import io
 import math
+import subprocess
+import time
 import numpy as np
 from PIL import Image
 from django import forms
-from .models import ImageUpload, CLUTUpload
+from .models import ImageUpload, CLUTUpload, CLUTCreate
 from django.conf import settings
 from django.shortcuts import redirect, render
+from django.core.files import File
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
 from django.contrib.sessions.models import Session
 from django.core.exceptions import ValidationError
 from django.utils.safestring import mark_safe
+from django.core.files.base import ContentFile
 from pathlib import Path
 
 def filtered_images(images):
@@ -193,8 +200,24 @@ class UploadCLUTForm(forms.ModelForm):
 
 #TODO takes one or optionally two images and extracts a CLUT from the difference between them usng extract_CLUT.sh
 # if only one image is passed, it will use the default image provided as the second image to extract the CLUT from
-class CreateCLUTForm(forms.Form):
-    session_key = forms.CharField(max_length=200)
+class CreateCLUTForm(forms.ModelForm):
+    class Meta:
+        model = CLUTCreate
+        fields = ('sample', 'identity', 'info') # or list specific fields
+        labels = {
+            "sample" : "The target image (the look you want to clone):",
+            "identity" : "The identity image (the baseline):",
+            "info": "Any additional information:"
+        }
+        widgets = {
+            "sample" : forms.ClearableFileInput(attrs={'class':'form-control form-control-lg', 'placeholder':'images' }),
+            "identity" : forms.ClearableFileInput(attrs={'class':'form-control form-control-lg', 'placeholder':'images' }),
+        }
+
+        def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+                if 'clut' in self.fields:
+                    self.fields['clut'].required = False
 
 #VIEWS
 def upload_image(request):
@@ -331,33 +354,108 @@ def clut(request):
         
     return render(request, 'imageForm.html', {'form': form})
 
-def create_clut(request):
+def clut_create(request, print_benchmarks=False):
+    #The Recommended Architecture if you want to use Celery (Asynchronous)
+    # If the Bash script takes more than 2 seconds, you should implement an asynchronous pattern
+    # .1 Django View Saves sample and identity using default model handling
+    # .2 Django ViewCommits instance to DB with a status flag (status='processing')
+    # .3 Celery TaskTriggers background task with instance.id and runs the subprocess
+    # .4 FrontendRedirects user immediately to a loading page that polls the server for completion.
     if request.method == 'POST':
-        #make sure session key exists
         if not request.session.session_key:
             request.session.save()
         key = request.session.session_key
-        #instatiate form
-        form = UploadCLUTForm(request.POST, request.FILES)
-        if form.is_valid():
-            instance = form.save(commit=False) # Don't save yet
-            instance.session_key =  Session.objects.get(session_key=key) # Auto-populate 'user' field with current user
-            # TODO check if the uploaded CLUT file is actually a CLUT
-            if not is_haldclut(instance.image):
-                print("Uploaded file is not a valid HaldCLUT.")
-                return redirect('clut') #TODO redirect to error page
-            else:
-                print("Uploaded file is a valid HaldCLUT.")
-                instance.save()
-                form.save()
-                return redirect('clut') #TODO Redirect to a success page
-        else:
-            print("Invalid form data:", form.errors)
-            return redirect('clut') #TODO redirect to error page
-    else:
-        form = UploadCLUTForm()
         
-    return render(request, 'imageForm.html', {'form': form})
+        form = CreateCLUTForm(request.POST, request.FILES)
+        if form.is_valid():
+            instance = form.save(commit=False)
+            try:
+                instance.session_key = Session.objects.get(session_key=key)
+            except Session.DoesNotExist:
+                # Handle edge case where session expired mid-request
+                return redirect('error_page')
+
+            # 1. Define paths and save uploaded files to disk safely
+            sample_file = request.FILES['sample']
+            identity_file = request.FILES['identity']
+            
+            # Use safe file naming to prevent path traversal issues
+            sample_rel_path = f'session/{key}/sample/{sample_file.name}'
+            identity_rel_path = f'session/{key}/identity/{identity_file.name}'
+            clut_rel_path = f'session/{key}/clut/clut.png'
+
+            # Save uploaded files into Django's storage system
+            sample_path = default_storage.save(sample_rel_path, ContentFile(sample_file.read()))
+            identity_path = default_storage.save(identity_rel_path, ContentFile(identity_file.read()))
+            
+            absolute_sample_path = os.path.join(settings.MEDIA_ROOT, sample_path)
+            absolute_identity_path = os.path.join(settings.MEDIA_ROOT, identity_path)
+            absolute_output_path = os.path.join(settings.MEDIA_ROOT, clut_rel_path)
+            
+            os.makedirs(os.path.dirname(absolute_output_path), exist_ok=True)
+
+            # 2. Run bash script safely using absolute paths
+            command = [
+                'bash',
+                'extract_CLUT.sh',
+                absolute_sample_path,
+                absolute_identity_path,
+                absolute_output_path,
+            ]
+
+             # 1. Start the high-precision timer
+            start_time = time.perf_counter()
+
+            try:
+                # 2. Run the process (with a defensive 15-second timeout)
+                subprocess.run(command, capture_output=True, text=True, check=True, timeout=15)
+                
+                # 3. Calculate total elapsed time
+                execution_time = time.perf_counter() - start_time
+                
+                if print_benchmarks:
+                    print(f"[BENCHMARK] CLUT extraction completed successfully in {execution_time:.3f} seconds.")
+
+                if os.path.exists(absolute_output_path):
+                    instance.clut = clut_rel_path
+                    instance.save()
+                    return redirect('clut')
+                else:
+                    raise FileNotFoundError(f"Bash process failed to write output.")
+                    
+            except (subprocess.CalledProcessError, FileNotFoundError) as e:
+                # Log error here (e.g., logger.error(e))
+                return redirect('error_page') 
+        else:
+            return render(request, 'clut.html', {'form': form})
+            
+    else:
+        form = CreateCLUTForm()
+        
+    return render(request, 'clut.html', {'form': form})
+
+def display_cluts(request, session_key=None):
+    if request.method == "GET":
+        key = request.GET.get('key', '')
+
+    #get the key manually if not passed
+    if not session_key:
+        key = request.session.session_key
+    else:
+        key = session_key
+    
+    key_cluts = CLUTCreate.objects.filter(session_key=key)
+    print(len(key_cluts))
+    #create context and render form
+    form = CreateCLUTForm()
+    context = {'id': key,
+                'cluts': key_cluts,
+                'form': form
+            }
+    #TODO refactor dashboard into a list
+    return render(request, 'clut_dashboard.html', context)
+
+
 def donate(request):
     return render(request, 'donate.html')
 

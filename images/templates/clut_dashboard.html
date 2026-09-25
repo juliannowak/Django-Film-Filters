@@ -1,0 +1,56 @@
+<!--context: id, cluts, form-->
+<head>
+  {% load django_bootstrap5 %}
+  {% bootstrap_css %}
+  {% bootstrap_javascript %}
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark light">
+  <title>{% block title %}Django Film Filters{% endblock %}</title>
+  
+  <!-- SASS stylesheets go here in the head -->
+  {% load static %}
+  {% load sass_tags %}
+  <link href="{% static 'bootstrap.min.css' %}" rel="stylesheet" type="text/css"/>
+  <link href="{% sass_src 'main.scss' %}" rel="stylesheet" type="text/css" />
+
+</head>
+<body>
+  <div class="app">
+
+    <h1>Your CLUT Dashboard/Gallery</h1><br>
+    {% if id %}
+        <p>Your ID: {{id}}</p>
+        <p>Keep this ID (or your link) if you want to find your CLUTs online again.</p>
+    {% endif %}
+
+    {% if cluts %}
+        <ul>
+            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+            Show CLUTs
+            </button>
+            
+            <div class="collapse" id="collapseExample">
+                {% for clut in cluts %}
+                <li>
+                    <img width=480 src="{{ clut.clut.url }}" alt="Sample #{{forloop.counter}}">
+                    <!-- <h4>Sample #{{forloop.counter}}</h4><br>
+                    <img width=480 src="{{ clut.sample.url }}" alt="Sample #{{forloop.counter}}">
+                    <h4>Identity #{{forloop.counter}}</h4><br>
+                    <img width=480 src="{{ clut.identity.url }}" alt="Identity #{{forloop.counter}}"> -->
+                </li>
+                {% endfor %}
+            </div>
+        </ul>
+    {% else %}
+        <p>No CLUTs found.<br>Please upload a CLUT to begin</p>
+    {% endif %}
+    </div>
+
+    <footer>
+      <a href="/about">🎞️ Help Us Grow: Contribute Your Own Film Styles</a>
+      <a href="/donate">💸 Help Me Grow: Donate</a>
+      <a href="https://github.com/juliannowak/Django-Film-Filters">⌨️ Check Out The Project On GitHub</a>
+    </footer>
+</body>

@@ -56,5 +56,5 @@ python manage.py runserver;
 - Docker support
 - pre_deploy script - fix secret_key generation
 - image2ascii support - add a blank file to CLUT folder and catch the filter
-- make a footer
-- clut generation script
+- implement delete hooks for files
+ 
