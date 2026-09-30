@@ -7,19 +7,18 @@ from django.conf import settings
 import glob
 import os
 
-
 def session_directory_path(instance, filename): 
-    return os.path.join('session', str(instance.session_key), filename)
+    return os.path.join('session', str(instance.session_key), str(instance.pk), filename)
     #return '/session/{0}/{1}'.format(instance.session_key, filename)
 
 def sample_directory_path(instance, filename): 
-    return os.path.join('session', str(instance.session_key), 'sample', filename)
+    return os.path.join('session', str(instance.session_key), 'samples', str(instance.pk), filename)
 
 def identity_directory_path(instance, filename): 
-    return os.path.join('session', str(instance.session_key), 'identity',filename)
+    return os.path.join('session', str(instance.session_key), 'identities', str(instance.pk), filename)
 
 def clut_directory_path(instance, filename): 
-    return os.path.join('session', str(instance.session_key), 'clut', filename)
+    return os.path.join('session', str(instance.session_key), 'cluts', str(instance.pk), filename)
 
 def get_film_choices():
     names = ["Color"]
@@ -30,6 +29,7 @@ def get_film_choices():
     names += ["Black and White"]
     files += glob.glob(os.path.join(os.getcwd(), settings.CLUT_DIR, "Black and White/*.png"), recursive=True)
     names += [os.path.basename(str(file[:-4])) for file in glob.glob(os.path.join(os.getcwd(), settings.CLUT_DIR, "Black_and_White/*.png"), recursive=True)]
+    #TODO add user uploaded cluts to the list of choices too
     file_map = dict(zip(files,names))
     print(len(file_map.keys()))
     return file_map

@@ -220,7 +220,7 @@ class CreateCLUTForm(forms.ModelForm):
                     self.fields['clut'].required = False
 
 #VIEWS
-def upload_image(request):
+def create_upload(request):
     if request.method == 'POST':
         #make sure session key exists
         if not request.session.session_key:
@@ -262,36 +262,16 @@ def upload_image(request):
         
     return render(request, 'imageForm.html', {'form': form})
 
-#TODO use this instead of image_upload and clut views
-def generic_image_upload(request, form_class, redirect_to):
-    """
-    Generic view for handling a ModelForm upload.
-
-    Args:
-        request: The Django request object.
-        form_class: The form class to instantiate.
-        redirect_to: A Django URL name or URL to redirect to after success.
-    """
+def delete_image(request, session_key, pk):
+    key = session_key
     if not request.session.session_key:
         request.session.save()
-
-    key = request.session.session_key
-
-    if request.method == "POST":
-        form = form_class(request.POST, request.FILES)
-
-        if form.is_valid():
-            instance = form.save(commit=False)
-            instance.session_key = Session.objects.get(session_key=key)
-            instance.save()
-
-            return redirect(redirect_to)
-
-        print("Invalid form data:", form.errors)
-    else:
-        form = form_class()
-
-    return render(request, "imageForm.html", {"form": form})
+        key = request.session.session_key
+        if pk == None:
+            ImageUpload.objects.filter(session_key=key).delete()
+        else:
+            ImageUpload.objects.filter(session_key=key, pk=pk).delete()
+        return redirect('key_uploads', session_key=key)
 
 def display_images(request, session_key=None, switches=[]):
     if request.method == "GET":
@@ -354,7 +334,7 @@ def clut(request):
         
     return render(request, 'imageForm.html', {'form': form})
 
-def clut_create(request, print_benchmarks=False):
+def create_clut(request, print_benchmarks=False):
     #The Recommended Architecture if you want to use Celery (Asynchronous)
     # If the Bash script takes more than 2 seconds, you should implement an asynchronous pattern
     # .1 Django View Saves sample and identity using default model handling
@@ -423,9 +403,19 @@ def clut_create(request, print_benchmarks=False):
                 else:
                     raise FileNotFoundError(f"Bash process failed to write output.")
                     
-            except (subprocess.CalledProcessError, FileNotFoundError) as e:
-                # Log error here (e.g., logger.error(e))
-                return redirect('error_page') 
+            except subprocess.TimeoutExpired:
+                execution_time = time.perf_counter() - start_time
+                if print_benchmarks:
+                    print(f"[BENCHMARK] CRITICAL: Script timed out and was killed after {execution_time:.3f} seconds.")
+                return redirect('error_page')
+
+            except subprocess.CalledProcessError as e:
+                execution_time = time.perf_counter() - start_time
+                if print_benchmarks:
+                    print(f"[BENCHMARK] ERROR: Script failed after {execution_time:.3f} seconds.")
+                    print(f"[BENCHMARK] Stderr output: {e.stderr}")
+                return redirect('error_page')
+        
         else:
             return render(request, 'clut.html', {'form': form})
             
@@ -434,6 +424,17 @@ def clut_create(request, print_benchmarks=False):
         
     return render(request, 'clut.html', {'form': form})
 
+def delete_clut(request, session_key, pk):
+    key = session_key
+    if not request.session.session_key:
+        request.session.save()
+        key = request.session.session_key
+        if pk == None:
+            CLUTCreate.objects.filter(session_key=key).delete()
+        else:
+            CLUTCreate.objects.filter(session_key=key, pk=pk).delete()
+        return redirect('clut', session_key=key)
+    
 def display_cluts(request, session_key=None):
     if request.method == "GET":
         key = request.GET.get('key', '')
@@ -455,9 +456,39 @@ def display_cluts(request, session_key=None):
     #TODO refactor dashboard into a list
     return render(request, 'clut_dashboard.html', context)
 
-
 def donate(request):
     return render(request, 'donate.html')
 
 def about(request):
     return render(request, 'about.html')
+
+#TODO use this instead of image_upload and clut views
+def generic_image_upload(request, form_class, redirect_to):
+    """
+    Generic view for handling a ModelForm upload.
+
+    Args:
+        request: The Django request object.
+        form_class: The form class to instantiate.
+        redirect_to: A Django URL name or URL to redirect to after success.
+    """
+    if not request.session.session_key:
+        request.session.save()
+
+    key = request.session.session_key
+
+    if request.method == "POST":
+        form = form_class(request.POST, request.FILES)
+
+        if form.is_valid():
+            instance = form.save(commit=False)
+            instance.session_key = Session.objects.get(session_key=key)
+            instance.save()
+
+            return redirect(redirect_to)
+
+        print("Invalid form data:", form.errors)
+    else:
+        form = form_class()
+
+    return render(request, "imageForm.html", {"form": form})
