@@ -8,7 +8,7 @@ import time
 import numpy as np
 from PIL import Image
 from django import forms
-from .models import ImageUpload, CLUTUpload, CLUTCreate
+from .models import ImageUpload, CLUTUpload, CLUTGenerate
 from django.conf import settings
 from django.shortcuts import redirect, render
 from django.core.files import File
@@ -20,17 +20,22 @@ from django.utils.safestring import mark_safe
 from django.core.files.base import ContentFile
 from pathlib import Path
 
-def filtered_images(images):
+def apply_ascii():
+    pass
+
+def filtered_images(image_paths):
     filtered = []
-    for image in images:
-        open_image = Image.open(image.image) #TODO rename
+    for image in image_paths:
+        image = Image.open(image.image)
         filter_path = os.path.join(settings.CLUT_DIR, image.film)
         filter = Image.open((filter_path))
         print(filter_path)
         if "Black and White" in filter_path:
-            filtered.append(apply_filter(filter, open_image.convert('L'), True))
+            filtered.append(apply_filter(filter, image.convert('L'), True))
+        if "ASCII" in filter_path:
+            apply_ascii(image)
         else:
-            filtered.append(apply_filter(filter, open_image))
+            filtered.append(apply_filter(filter, image))
     return filtered
     
 def apply_filter(hald_img, img, is_monochrome=False):
@@ -208,7 +213,7 @@ class UploadCLUTForm(forms.ModelForm):
 # if only one image is passed, it will use the default image provided as the second image to extract the CLUT from
 class GenerateCLUTForm(forms.ModelForm):
     class Meta:
-        model = CLUTCreate
+        model = CLUTGenerate
         fields = ('sample', 'identity', 'info') # or list specific fields
         labels = {
             "sample" : "The target image (the look you want to clone):",
@@ -308,21 +313,20 @@ def display_images(request, session_key=None, switches=[]):
                 }
     return render(request, 'dashboard.html', context)
 
-def delete_clut(request, session_key, pk, name):
+def delete_clut(request, session_key=None, pk=None, name=None):
     key = session_key
     #TODO: Add a check to ensure that the session key matches the current user's session key for security,
     # if not prompt for password
     if pk == None and name == None:
-        CLUTCreate.objects.filter(session_key=key).delete()
+        CLUTGenerate.objects.filter(session_key=key).delete()
     elif pk != None:
-        CLUTCreate.objects.filter(session_key=key, pk=pk).delete()
+        CLUTGenerate.objects.filter(session_key=key, pk=pk).delete()
     elif name != None:
-        CLUTCreate.objects.filter(session_key=key, name=name).delete()
+        CLUTGenerate.objects.filter(session_key=key, name=name).delete()
     return redirect('key_images', session_key=key)
 
 #TODO rename to create_and_display_cluts  
-def display_cluts(request, session_key=None):
-            
+def display_cluts(request, session_key=None, print_benchmarks=True):
     key = request.GET.get('key', None)
     if key is None:
         if session_key is None:
@@ -337,69 +341,11 @@ def display_cluts(request, session_key=None):
  
     if request.method == 'POST':
         #instatiate form
-        form = UploadCLUTForm(request.POST, request.FILES)
-        if form.is_valid():
-            instance = form.save(commit=False) # Don't save to DB yet
-            instance.session_key = Session.objects.get(session_key=key)
-            
-            uploaded_file = form.cleaned_data['image']
-            uploaded_file.seek(0)  # Reset file pointer
-            
-            tmp_path = None
-            try:
-                # 1. Write the temporary file inside the 'with' block
-                with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(uploaded_file.name)[1]) as tmp:
-                    for chunk in uploaded_file.chunks():
-                        tmp.write(chunk)
-                    tmp_path = tmp.name
-                # --- The 'with' block ends here, which safely CLOSES and flushes the file ---
-
-                # 2. Now the file is safely closed on disk, validate it:
-                if not is_haldclut(tmp_path):
-                    print("Uploaded file is not a valid HaldCLUT.")
-                    return redirect('cluts') # TODO: redirect to error page
-                else:
-                    print("Uploaded file is a valid HaldCLUT.")
-                    # 3. Save the instance ONCE (do not call form.save() again)
-                    instance.save()
-                    return redirect('cluts') # TODO: Redirect to a success page
-
-            finally:
-                # 4. Always clean up the temporary file
-                if tmp_path and os.path.exists(tmp_path):
-                    os.remove(tmp_path)
-
-        else:
-            print("Invalid form data:", form.errors)
-            return redirect('cluts') # TODO: redirect to error page
-    # else:
-    #     form = UploadCLUTForm()
-    
-    key_cluts = CLUTUpload.objects.filter(session_key=key)
-    print(len(key_cluts))
-    #create context and render form
-    form = UploadCLUTForm()
-    context = {'key': key,
-                'cluts': key_cluts,
-                'form': form
-            }
-    return render(request, 'clut_dashboard.html', context)
-
-def generate_clut(request, print_benchmarks=False):
-    #The Recommended Architecture if you want to use Celery (Asynchronous)
-    # If the Bash script takes more than 2 seconds, you should implement an asynchronous pattern
-    # .1 Django View Saves sample and identity using default model handling
-    # .2 Django ViewCommits instance to DB with a status flag (status='processing')
-    # .3 Celery TaskTriggers background task with instance.id and runs the subprocess
-    # .4 FrontendRedirects user immediately to a loading page that polls the server for completion.
-    if request.method == 'POST':
-        if not request.session.session_key:
-            request.session.save()
-        key = request.session.session_key
-        
         form = GenerateCLUTForm(request.POST, request.FILES)
         if form.is_valid():
-            instance = form.save(commit=False)
+            instance = form.save(commit=False) # Don't save to DB yet
+            #instance.session_key = Session.objects.get(session_key=key)
+            
             try:
                 instance.session_key = Session.objects.get(session_key=key)
             except Session.DoesNotExist:
@@ -434,7 +380,7 @@ def generate_clut(request, print_benchmarks=False):
                 absolute_output_path,
             ]
 
-             # 1. Start the high-precision timer
+            # 1. Start the high-precision timer
             start_time = time.perf_counter()
 
             try:
@@ -465,14 +411,79 @@ def generate_clut(request, print_benchmarks=False):
                 if print_benchmarks:
                     print(f"[BENCHMARK] ERROR: Script failed after {execution_time:.3f} seconds.")
                     print(f"[BENCHMARK] Stderr output: {e.stderr}")
-                return redirect('error_page')
-        
+                return redirect('error_page')     
         else:
-            return render(request, 'clut.html', {'form': form})
-            
+            print("Invalid form data:", form.errors)
+            return redirect('cluts') # TODO: redirect to error page
     else:
         form = GenerateCLUTForm()
-        
+    key_cluts = CLUTGenerate.objects.filter(session_key=key)
+    print(len(key_cluts))
+    #create context and render form - maybe unecessary
+    form = GenerateCLUTForm()
+    context = {'key': key,
+                'cluts': key_cluts,
+                'form': form
+            }
+    return render(request, 'clut_dashboard.html', context) #change  form into context
+
+def upload_clut(request, session_key=None):
+    #The Recommended Architecture if you want to use Celery (Asynchronous)
+    # If the Bash script takes more than 2 seconds, you should implement an asynchronous pattern
+    # .1 Django View Saves sample and identity using default model handling
+    # .2 Django ViewCommits instance to DB with a status flag (status='processing')
+    # .3 Celery TaskTriggers background task with instance.id and runs the subprocess
+    # .4 FrontendRedirects user immediately to a loading page that polls the server for completion.
+    key = request.GET.get('key', None)
+    if key is None:
+        if session_key is None:
+            #make sure session key exists
+            if not request.session.session_key:
+                request.session.save()
+            key = request.session.session_key
+        else:
+            key = session_key
+    print(f"Session Key: {key}")
+
+    if request.method == 'POST':    
+        form = UploadCLUTForm(request.POST, request.FILES)
+        if form.is_valid():
+            instance = form.save(commit=False)
+
+            uploaded_file = form.cleaned_data['image']
+            uploaded_file.seek(0)  # Reset file pointer
+            
+            tmp_path = None
+            try:
+                # 1. Write the temporary file inside the 'with' block
+                with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(uploaded_file.name)[1]) as tmp:
+                    for chunk in uploaded_file.chunks():
+                        tmp.write(chunk)
+                    tmp_path = tmp.name
+                # --- The 'with' block ends here, which safely CLOSES and flushes the file ---
+
+                # 2. Now the file is safely closed on disk, validate it:
+                if not is_haldclut(tmp_path):
+                    print("Uploaded file is not a valid HaldCLUT.")
+                    return redirect('cluts') # TODO: redirect to error page
+                else:
+                    print("Uploaded file is a valid HaldCLUT.")
+                    # 3. Save the instance ONCE (do not call form.save() again)
+                    instance.save()
+                    return redirect('cluts') # TODO: Redirect to a success page
+
+            finally:
+                # 4. Always clean up the temporary file
+                if tmp_path and os.path.exists(tmp_path):
+                    os.remove(tmp_path)
+                else:
+                    print("Temporary file does not exist.")
+  
+        else:
+            print("Invalid form data:", form.errors)
+            return redirect('upload_clut')
+    else:
+        form = UploadCLUTForm()
     return render(request, 'clut.html', {'form': form})
 
 def donate(request):

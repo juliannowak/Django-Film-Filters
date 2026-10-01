@@ -5,7 +5,7 @@ from django.http import HttpResponse
 
 urlpatterns = [
     path('', views.display_images,  name='images_create'),
-    path('generate/', views.generate_clut, name='generate_clut'),
+    path('upload/', views.upload_clut, name='upload_clut'),
     path('images/<str:session_key>/', views.display_images, name='key_images'),
     path('images/', views.display_images, name='session_uploads'), #maybe just rename to uploads
     path('cluts/', views.display_cluts, name='cluts'),

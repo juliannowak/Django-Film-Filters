@@ -121,6 +121,21 @@ form {
   }
 }
 
+li .clut-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px; // Space between each CLUT item
+}
+
+li .clut-images {
+  display: flex;
+  flex-direction: row;
+  gap: 0px; // Space between images
+  justify-content: center; // Center the images horizontally
+  margin-top: 10px; // Space above the images
+}
+
 /* Update your CSS to target only that specific class */
 .no-spinners::-webkit-outer-spin-button,
 .no-spinners::-webkit-inner-spin-button {

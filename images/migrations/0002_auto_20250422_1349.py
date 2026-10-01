@@ -20,6 +20,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='image',
             name='image',
-            field=models.ImageField(upload_to=images.models.session_directory_path),
+            field=models.ImageField(upload_to=images.models.image_directory_path),
         ),
     ]

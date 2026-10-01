@@ -8,27 +8,6 @@ import glob
 import os
 import uuid
 
-def session_directory_path(instance, filename): 
-    short_id = str(instance.id_slug).replace('-', '')[:8]
-    return os.path.join('session', str(instance.session_key), short_id, filename)
-    #return '/session/{0}/{1}'.format(instance.session_key, filename)
-
-def sample_directory_path(instance, filename): 
-    short_id = str(instance.id_slug).replace('-', '')[:8]
-    return os.path.join('session', str(instance.session_key), short_id, 'samples', filename)
-
-def identity_directory_path(instance, filename): 
-    short_id = str(instance.id_slug).replace('-', '')[:8]
-    return os.path.join('session', str(instance.session_key), short_id, 'identities', filename)
-
-def clut_directory_path(instance, filename): 
-    short_id = str(instance.id_slug).replace('-', '')[:8]
-    return os.path.join('session', str(instance.session_key), short_id, 'cluts', filename)
-
-def uploaded_clut_directory_path(instance, filename): 
-    short_id = str(instance.id_slug).replace('-', '')[:8]
-    return os.path.join('session', str(instance.session_key), short_id, 'user_uploads', filename)
-
 def get_film_choices():
     names = ["Color"]
     files = ["1"]
@@ -50,12 +29,36 @@ def validate_film_choice(value):
     if value in ("Color", "Black and White"):
         raise ValidationError(f"{value} is not an film. It is just there to seperate Color from Black and White.") #redirect back to create page
 
+#media file upload paths
+def image_directory_path(instance, filename): 
+    short_id = str(instance.id_slug).replace('-', '')[:8]
+    return os.path.join('session', str(instance.session_key), 'images', short_id, filename)
+
+def uploaded_clut_directory_path(instance, filename): 
+    
+    short_id = str(instance.id_slug).replace('-', '')[:8]
+    return os.path.join('session', str(instance.session_key), 'cluts', short_id, 'user_uploads', filename)
+
+#these are for generated cluts, samples, and identities
+def sample_directory_path(instance, filename): 
+    short_id = str(instance.id_slug).replace('-', '')[:8]
+    return os.path.join('session', str(instance.session_key), 'generated', short_id, 'samples', filename)
+
+def identity_directory_path(instance, filename): 
+    short_id = str(instance.id_slug).replace('-', '')[:8]
+    return os.path.join('session', str(instance.session_key), 'generated', short_id, 'identities', filename)
+
+def clut_directory_path(instance, filename): 
+    short_id = str(instance.id_slug).replace('-', '')[:8]
+    return os.path.join('session', str(instance.session_key), 'generated', short_id, 'cluts', filename)
+
+#models for uploaded images and cluts
 class ImageUpload(models.Model):
     id_slug = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     name = models.CharField(max_length=200)
     session_key = models.ForeignKey(Session, on_delete=models.SET_NULL, blank=True, null=True)
-    image = models.ImageField(upload_to=session_directory_path)
-    filtered = models.ImageField(upload_to=session_directory_path, default=None) #TODO change these to file fields
+    image = models.ImageField(upload_to=image_directory_path)
+    filtered = models.ImageField(upload_to=image_directory_path, default=None) #TODO change these to file fields
     film = models.CharField(max_length=200, choices=get_film_choices, validators=[validate_film_choice], blank=False, null=False, default=None)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -75,7 +78,8 @@ class CLUTUpload(models.Model):
     def __str__(self):
         return f'{self.film} {self.exposure}'
 
-class CLUTCreate(models.Model):
+#models for generated cluts, samples, and identities
+class CLUTGenerate(models.Model):
     id_slug = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     session_key = models.ForeignKey(Session, on_delete=models.SET_NULL, blank=True, null=True)
     clut = models.ImageField(upload_to=clut_directory_path, blank=True, null=True)

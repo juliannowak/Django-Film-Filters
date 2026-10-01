@@ -27,15 +27,33 @@
 
     {% if cluts %}
         <ul>
-            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample2" aria-expanded="false" aria-controls="collapseExample2">
             Show CLUTs
             </button>
             
-            <div class="collapse" id="collapseExample">
+            <!-- rename this id -->
+            <div class="collapse" id="collapseExample2">
                 {% for clut in cluts %}
-                <li>
-                    <img width=240 src="{{ clut.image.url }}" alt="Sample #{{forloop.counter}}">
-                    <p>Film: {{ clut.film }} - {{ clut.exposure }}, Description: {{ clut.description }}</p>
+                <li class="clut-item">
+                    <li class="clut-images">
+                        <h3>Sample #{{forloop.counter}}</h3>
+                        <img width=240 src="{{ clut.sample.url }}" alt="Picture of Sample #{{forloop.counter}}">
+                        <button class="btn btn-warning" href="{{ clut.sample.url }}" download>Download Sample</button>
+                        
+                        <h3>Identity #{{forloop.counter}}</h3>
+                        <img width=240 src="{{ clut.identity.url }}" alt="Picture of Identity #{{forloop.counter}}">
+                        <button class="btn btn-warning" href="{{ clut.identity.url }}" download>Download Identity</button>
+                        
+                        <h3>HaldCLUT #{{forloop.counter}}</h3>
+                        <img width=240 src="{{ clut.clut.url }}" alt="Picture of HaldCLUT #{{forloop.counter}}">
+                        <button class="btn btn-warning" href="{{ clut.clut.url }}" download>Download HaldCLUT</button>
+                    </li> 
+                    <br>
+                    <p>Info: {{ clut.info }}</p>
+                    <br>
+                    <p>Date: {{ clut.created_at }}</p>
+                    <br>
+                    <button class="btn btn-danger" onclick="deleteCLUT('{{key}}', '{{clut.pk}}')">Delete</button>
                 </li>
                 {% endfor %}
             </div>

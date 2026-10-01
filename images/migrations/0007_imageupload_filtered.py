@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='imageupload',
             name='filtered',
-            field=models.ImageField(default=None, upload_to=images.models.session_directory_path),
+            field=models.ImageField(default=None, upload_to=images.models.image_directory_path),
         ),
     ]

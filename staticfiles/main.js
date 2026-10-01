@@ -16,9 +16,17 @@ function switchFilter(id, switches) {
     window.location.replace(newUrl);
 }
 
+// could generalize the delete functions to take a type parameter, but for now, keep them separate for clarity.
 function deleteImage(key, pk) {
     const deleteUrl = new URL(`/images/delete/${key}/${pk}/`, window.location.origin);
-    console.log('Delete URL:', deleteUrl.toString());
+    console.log('Delete Image URL:', deleteUrl.toString());
+    // Redirect
+    window.location.href = deleteUrl.toString();
+}
+
+function deleteCLUT(key, pk) {
+    const deleteUrl = new URL(`/cluts/delete_clut/${key}/${pk}/`, window.location.origin);
+    console.log('Delete CLUT URL:', deleteUrl.toString());
     // Redirect
     window.location.href = deleteUrl.toString();
 }
