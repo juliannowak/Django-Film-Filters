@@ -3,6 +3,7 @@ import os
 import io
 import math
 import subprocess
+import tempfile
 import time
 import numpy as np
 from PIL import Image
@@ -133,6 +134,7 @@ def is_haldclut(file_path: str | Path) -> bool:
     try:
         path = Path(file_path)
         if not path.is_file():
+            print(f"File does not exist: {path}")
             return False
 
         with Image.open(path) as img:
@@ -140,20 +142,24 @@ def is_haldclut(file_path: str | Path) -> bool:
 
             width, height = img.size
             if width != height:
+                print(f"Image is not square: {width}x{height}")
                 return False
 
             # HaldCLUT side length must be n^3
             n = round(width ** (1 / 3))
             if n < 2 or (n ** 3) != width:
+                print(f"Image is not a valid HaldCLUT size: {width}x{height}")
                 return False
 
             # Reject one-color/near-one-color HaldCLUTs
             if not is_not_single_color(img):
+                print(f"Image is essentially a single color: {width}x{height}")
                 return False
 
         return True
 
-    except Exception:
+    except Exception as e:
+        print(f"Error validating HaldCLUT: {e}")
         return False
 #FORMS    
 class UploadImageForm(forms.ModelForm):
@@ -200,7 +206,7 @@ class UploadCLUTForm(forms.ModelForm):
 
 #TODO takes one or optionally two images and extracts a CLUT from the difference between them usng extract_CLUT.sh
 # if only one image is passed, it will use the default image provided as the second image to extract the CLUT from
-class CreateCLUTForm(forms.ModelForm):
+class GenerateCLUTForm(forms.ModelForm):
     class Meta:
         model = CLUTCreate
         fields = ('sample', 'identity', 'info') # or list specific fields
@@ -220,12 +226,34 @@ class CreateCLUTForm(forms.ModelForm):
                     self.fields['clut'].required = False
 
 #VIEWS
-def create_upload(request):
+def delete_image(request, session_key, pk=None, name=None):
+    key = session_key
+    #TODO: Add a check to ensure that the session key matches the current user's session key for security,
+    # if not prompt for password
+    if pk == None and name == None:
+        ImageUpload.objects.filter(session_key=key).delete()
+    elif pk != None:
+        ImageUpload.objects.filter(session_key=key, pk=pk).delete()
+    elif name != None:
+        ImageUpload.objects.filter(session_key=key, name=name).delete()
+    return redirect('key_images', session_key=key)
+
+#TODO rename to create_and_display_images
+def display_images(request, session_key=None, switches=[]):
+   
+    key = request.GET.get('key', None)
+    switches = request.GET.get('switches', [])
+    if key is None:
+        if session_key is None:
+            #make sure session key exists
+            if not request.session.session_key:
+                request.session.save()
+            key = request.session.session_key
+        else:
+            key = session_key
+    print(f"Session Key: {key}\nSwitches: {switches}")
+
     if request.method == 'POST':
-        #make sure session key exists
-        if not request.session.session_key:
-            request.session.save()
-        key = request.session.session_key
         #instatiate form
         form = UploadImageForm(request.POST, request.FILES)
         if form.is_valid():
@@ -253,36 +281,10 @@ def create_upload(request):
             if is_cleaned:
                 instance.save()
                 form.save()
-                return redirect('key_uploads', session_key=key) # Redirect to a success page
+                return redirect('key_images', session_key=key) # Redirect to a success page
         else:
             print("Invalid form data:", form.errors)
             return redirect('images_create') #redirect back to upload page
-    else:
-        form = UploadImageForm()
-        
-    return render(request, 'imageForm.html', {'form': form})
-
-def delete_image(request, session_key, pk):
-    key = session_key
-    if not request.session.session_key:
-        request.session.save()
-        key = request.session.session_key
-        if pk == None:
-            ImageUpload.objects.filter(session_key=key).delete()
-        else:
-            ImageUpload.objects.filter(session_key=key, pk=pk).delete()
-        return redirect('key_uploads', session_key=key)
-
-def display_images(request, session_key=None, switches=[]):
-    if request.method == "GET":
-        key = request.GET.get('key', '')
-        switches = request.GET.get('switches', [])
-
-    #get the key manually if not passed
-    if not session_key:
-        key = request.session.session_key
-    else:
-        key = session_key
     
     key_images = ImageUpload.objects.filter(session_key=key)
     filtered = filtered_images(key_images)
@@ -296,45 +298,94 @@ def display_images(request, session_key=None, switches=[]):
         
     #create context and render form
     form = UploadImageForm()
-    all = list(zip(key_images, filtered, switches))
+    images = list(zip(key_images, filtered, switches))
     #print(list(all))
     #TODO add film context far that parses path under image.film into the name of the film filter used
-    context = {'id': key,
-                'context': all, #rename to images, dont include switches
+    context = {'key': key,
+                'images': images, 
                 'switches': switches,
                 'form': form
                 }
     return render(request, 'dashboard.html', context)
 
-def clut(request):
+def delete_clut(request, session_key, pk, name):
+    key = session_key
+    #TODO: Add a check to ensure that the session key matches the current user's session key for security,
+    # if not prompt for password
+    if pk == None and name == None:
+        CLUTCreate.objects.filter(session_key=key).delete()
+    elif pk != None:
+        CLUTCreate.objects.filter(session_key=key, pk=pk).delete()
+    elif name != None:
+        CLUTCreate.objects.filter(session_key=key, name=name).delete()
+    return redirect('key_images', session_key=key)
+
+#TODO rename to create_and_display_cluts  
+def display_cluts(request, session_key=None):
+            
+    key = request.GET.get('key', None)
+    if key is None:
+        if session_key is None:
+            #make sure session key exists
+            if not request.session.session_key:
+                request.session.save()
+            key = request.session.session_key
+        else:
+            key = session_key
+    print(f"Session Key: {key}")
+
+ 
     if request.method == 'POST':
-        #make sure session key exists
-        if not request.session.session_key:
-            request.session.save()
-        key = request.session.session_key
         #instatiate form
         form = UploadCLUTForm(request.POST, request.FILES)
         if form.is_valid():
-            instance = form.save(commit=False) # Don't save yet
-            instance.session_key =  Session.objects.get(session_key=key) # Auto-populate 'user' field with current user
-            # TODO check if the uploaded CLUT file is actually a CLUT
-            if not is_haldclut(instance.image):
-                print("Uploaded file is not a valid HaldCLUT.")
-                return redirect('clut') #TODO redirect to error page
-            else:
-                print("Uploaded file is a valid HaldCLUT.")
-                instance.save()
-                form.save()
-                return redirect('clut') #TODO Redirect to a success page
+            instance = form.save(commit=False) # Don't save to DB yet
+            instance.session_key = Session.objects.get(session_key=key)
+            
+            uploaded_file = form.cleaned_data['image']
+            uploaded_file.seek(0)  # Reset file pointer
+            
+            tmp_path = None
+            try:
+                # 1. Write the temporary file inside the 'with' block
+                with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(uploaded_file.name)[1]) as tmp:
+                    for chunk in uploaded_file.chunks():
+                        tmp.write(chunk)
+                    tmp_path = tmp.name
+                # --- The 'with' block ends here, which safely CLOSES and flushes the file ---
+
+                # 2. Now the file is safely closed on disk, validate it:
+                if not is_haldclut(tmp_path):
+                    print("Uploaded file is not a valid HaldCLUT.")
+                    return redirect('cluts') # TODO: redirect to error page
+                else:
+                    print("Uploaded file is a valid HaldCLUT.")
+                    # 3. Save the instance ONCE (do not call form.save() again)
+                    instance.save()
+                    return redirect('cluts') # TODO: Redirect to a success page
+
+            finally:
+                # 4. Always clean up the temporary file
+                if tmp_path and os.path.exists(tmp_path):
+                    os.remove(tmp_path)
+
         else:
             print("Invalid form data:", form.errors)
-            return redirect('clut') #TODO redirect to error page
-    else:
-        form = UploadCLUTForm()
-        
-    return render(request, 'imageForm.html', {'form': form})
+            return redirect('cluts') # TODO: redirect to error page
+    # else:
+    #     form = UploadCLUTForm()
+    
+    key_cluts = CLUTUpload.objects.filter(session_key=key)
+    print(len(key_cluts))
+    #create context and render form
+    form = UploadCLUTForm()
+    context = {'key': key,
+                'cluts': key_cluts,
+                'form': form
+            }
+    return render(request, 'clut_dashboard.html', context)
 
-def create_clut(request, print_benchmarks=False):
+def generate_clut(request, print_benchmarks=False):
     #The Recommended Architecture if you want to use Celery (Asynchronous)
     # If the Bash script takes more than 2 seconds, you should implement an asynchronous pattern
     # .1 Django View Saves sample and identity using default model handling
@@ -346,7 +397,7 @@ def create_clut(request, print_benchmarks=False):
             request.session.save()
         key = request.session.session_key
         
-        form = CreateCLUTForm(request.POST, request.FILES)
+        form = GenerateCLUTForm(request.POST, request.FILES)
         if form.is_valid():
             instance = form.save(commit=False)
             try:
@@ -399,7 +450,7 @@ def create_clut(request, print_benchmarks=False):
                 if os.path.exists(absolute_output_path):
                     instance.clut = clut_rel_path
                     instance.save()
-                    return redirect('clut')
+                    return redirect('cluts')
                 else:
                     raise FileNotFoundError(f"Bash process failed to write output.")
                     
@@ -420,41 +471,9 @@ def create_clut(request, print_benchmarks=False):
             return render(request, 'clut.html', {'form': form})
             
     else:
-        form = CreateCLUTForm()
+        form = GenerateCLUTForm()
         
     return render(request, 'clut.html', {'form': form})
-
-def delete_clut(request, session_key, pk):
-    key = session_key
-    if not request.session.session_key:
-        request.session.save()
-        key = request.session.session_key
-        if pk == None:
-            CLUTCreate.objects.filter(session_key=key).delete()
-        else:
-            CLUTCreate.objects.filter(session_key=key, pk=pk).delete()
-        return redirect('clut', session_key=key)
-    
-def display_cluts(request, session_key=None):
-    if request.method == "GET":
-        key = request.GET.get('key', '')
-
-    #get the key manually if not passed
-    if not session_key:
-        key = request.session.session_key
-    else:
-        key = session_key
-    
-    key_cluts = CLUTCreate.objects.filter(session_key=key)
-    print(len(key_cluts))
-    #create context and render form
-    form = CreateCLUTForm()
-    context = {'id': key,
-                'cluts': key_cluts,
-                'form': form
-            }
-    #TODO refactor dashboard into a list
-    return render(request, 'clut_dashboard.html', context)
 
 def donate(request):
     return render(request, 'donate.html')
@@ -462,7 +481,7 @@ def donate(request):
 def about(request):
     return render(request, 'about.html')
 
-#TODO use this instead of image_upload and clut views
+#TODO save this snippet
 def generic_image_upload(request, form_class, redirect_to):
     """
     Generic view for handling a ModelForm upload.

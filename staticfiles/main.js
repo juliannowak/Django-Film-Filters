@@ -16,6 +16,13 @@ function switchFilter(id, switches) {
     window.location.replace(newUrl);
 }
 
+function deleteImage(key, pk) {
+    const deleteUrl = new URL(`/images/delete/${key}/${pk}/`, window.location.origin);
+    console.log('Delete URL:', deleteUrl.toString());
+    // Redirect
+    window.location.href = deleteUrl.toString();
+}
+
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {

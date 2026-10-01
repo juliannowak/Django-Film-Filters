@@ -6,19 +6,28 @@ from django.contrib.sessions.models import Session
 from django.conf import settings
 import glob
 import os
+import uuid
 
 def session_directory_path(instance, filename): 
-    return os.path.join('session', str(instance.session_key), str(instance.pk), filename)
+    short_id = str(instance.id_slug).replace('-', '')[:8]
+    return os.path.join('session', str(instance.session_key), short_id, filename)
     #return '/session/{0}/{1}'.format(instance.session_key, filename)
 
 def sample_directory_path(instance, filename): 
-    return os.path.join('session', str(instance.session_key), 'samples', str(instance.pk), filename)
+    short_id = str(instance.id_slug).replace('-', '')[:8]
+    return os.path.join('session', str(instance.session_key), short_id, 'samples', filename)
 
 def identity_directory_path(instance, filename): 
-    return os.path.join('session', str(instance.session_key), 'identities', str(instance.pk), filename)
+    short_id = str(instance.id_slug).replace('-', '')[:8]
+    return os.path.join('session', str(instance.session_key), short_id, 'identities', filename)
 
 def clut_directory_path(instance, filename): 
-    return os.path.join('session', str(instance.session_key), 'cluts', str(instance.pk), filename)
+    short_id = str(instance.id_slug).replace('-', '')[:8]
+    return os.path.join('session', str(instance.session_key), short_id, 'cluts', filename)
+
+def uploaded_clut_directory_path(instance, filename): 
+    short_id = str(instance.id_slug).replace('-', '')[:8]
+    return os.path.join('session', str(instance.session_key), short_id, 'user_uploads', filename)
 
 def get_film_choices():
     names = ["Color"]
@@ -42,6 +51,7 @@ def validate_film_choice(value):
         raise ValidationError(f"{value} is not an film. It is just there to seperate Color from Black and White.") #redirect back to create page
 
 class ImageUpload(models.Model):
+    id_slug = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     name = models.CharField(max_length=200)
     session_key = models.ForeignKey(Session, on_delete=models.SET_NULL, blank=True, null=True)
     image = models.ImageField(upload_to=session_directory_path)
@@ -54,7 +64,9 @@ class ImageUpload(models.Model):
         return f'{self.name}'
 
 class CLUTUpload(models.Model):
-    image = models.ImageField(upload_to='CLUT/user_uploads/')
+    id_slug = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    session_key = models.ForeignKey(Session, on_delete=models.SET_NULL, blank=True, null=True)
+    image = models.ImageField(upload_to=uploaded_clut_directory_path, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     film = models.CharField(max_length=200, blank=False, null=False, default=None)
     exposure = models.FloatField()
@@ -64,6 +76,7 @@ class CLUTUpload(models.Model):
         return f'{self.film} {self.exposure}'
 
 class CLUTCreate(models.Model):
+    id_slug = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     session_key = models.ForeignKey(Session, on_delete=models.SET_NULL, blank=True, null=True)
     clut = models.ImageField(upload_to=clut_directory_path, blank=True, null=True)
     sample = models.ImageField(upload_to=sample_directory_path, default=None)

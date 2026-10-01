@@ -1,4 +1,4 @@
-<!--context: id, context, switches, forms-->
+<!--images: key, images, switches, forms-->
 <head>
   {% load django_bootstrap5 %}
   {% bootstrap_css %}
@@ -18,22 +18,28 @@
 </head>
 <body>
   <div class="app">
+    <!-- Make accessible to main.js -->
     {{ switches|json_script:"my-switches" }}
+    {{ images.0.session_key|json_script:"my-session-key" }}
+
     <h1>Your Image Dashboard/Gallery</h1><br>
-    {% if id %}
-      <p>Your ID: {{id}}</p>
+    {% if key %}
+      <p>Your ID: {{key}}</p>
       <p>Keep this ID (or your link) if you want to find your images online again.</p>
     {% endif %}
 
-    {% if context %}
+    <!-- <p>Your ID: {{ request.session.session_key }}</p>
+    <p>Keep this ID (or the link) if you want to find your images online again.</p> -->
+
+    {% if images %}
       <ul>
         <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
           Show Images
         </button>
         
         <div class="collapse" id="collapseExample">
-          <p>Click or tap the images to sewitch between filtered and non-filtered</p>
-          {% for image, filtered, switch in context %}
+          <p>Click or tap the images to switch between filtered and non-filtered</p>
+          {% for image, filtered, switch in images %}
             {% if switch %}
               <li>
                 <h4>Image #{{forloop.counter}} (filtered): {{ image.name }}</h4><br>
@@ -43,6 +49,7 @@
               <li>
                 <h4>Image #{{forloop.counter}} (unfiltered): {{ image.name }}</h4><br>
                 <img onclick="switchFilter('{{forloop.counter0}}', '{{switches}}')" width=480 src="{{ image.image.url }}" alt="{{ image.name }}">
+                <button class="btn btn-danger" onclick="deleteImage('{{key}}', '{{image.pk}}')">Delete</button>
               </li>
             {% endif %}
           {% endfor %}
