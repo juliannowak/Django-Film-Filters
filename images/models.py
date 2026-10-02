@@ -79,14 +79,14 @@ class CLUTUpload(models.Model):
         return f'{self.film} {self.exposure}'
 
 #models for generated cluts, samples, and identities
-class CLUTGenerate(models.Model):
+class CLUTCreator(models.Model):
     id_slug = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     session_key = models.ForeignKey(Session, on_delete=models.SET_NULL, blank=True, null=True)
     clut = models.ImageField(upload_to=clut_directory_path, blank=True, null=True)
     sample = models.ImageField(upload_to=sample_directory_path, default=None)
     identity = models.ImageField(upload_to=identity_directory_path, default=None)
     created_at = models.DateTimeField(auto_now_add=True)
-    info = models.CharField(max_length=200)
+    filename = models.CharField(max_length=100)
 
     def __str__(self):
         return f'{self.created_at}'

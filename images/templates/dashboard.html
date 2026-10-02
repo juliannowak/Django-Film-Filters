@@ -7,7 +7,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="dark light">
-  <title>{% block title %}Django Film Filters{% endblock %}</title>
+  <title>{% block title %}Your Images{% endblock %}</title>
   
   <!-- SASS stylesheets go here in the head -->
   {% load static %}
@@ -22,14 +22,11 @@
     {{ switches|json_script:"my-switches" }}
     {{ images.0.session_key|json_script:"my-session-key" }}
 
-    <h1>Your Image Dashboard/Gallery</h1><br>
+    <h1>Your Images</h1><br>
     {% if key %}
       <p>Your ID: {{key}}</p>
       <p>Keep this ID (or your link) if you want to find your images online again.</p>
     {% endif %}
-
-    <!-- <p>Your ID: {{ request.session.session_key }}</p>
-    <p>Keep this ID (or the link) if you want to find your images online again.</p> -->
 
     {% if images %}
       <ul>
@@ -59,10 +56,15 @@
       <p>No images found.<br>Please upload an image to begin</p>
     {% endif %}
 
-    <h1>Upload Form</h1>
+    <h1>Upload Form</h1><br>
     <form action="" method="post" class="row g-3 pb-4" enctype="multipart/form-data">
       {% csrf_token %}
-      <br>
+      {% if form.errors %}
+        <div class="error-banner">
+            <p>Please correct the errors below:</p>
+            {{ form.errors }}
+        </div>
+      {% endif %}
       <table>
           {{ form.as_table }}
       </table>

@@ -8,7 +8,7 @@ import time
 import numpy as np
 from PIL import Image
 from django import forms
-from .models import ImageUpload, CLUTUpload, CLUTGenerate
+from .models import ImageUpload, CLUTUpload, CLUTCreator #models for: images, cluts, and created cluts.
 from django.conf import settings
 from django.shortcuts import redirect, render
 from django.core.files import File
@@ -20,22 +20,23 @@ from django.utils.safestring import mark_safe
 from django.core.files.base import ContentFile
 from pathlib import Path
 
+#TODO: implement ascii filter
 def apply_ascii():
     pass
 
-def filtered_images(image_paths):
+def filtered_images(images):
     filtered = []
-    for image in image_paths:
-        image = Image.open(image.image)
+    for image in images:
+        image_open = Image.open(image.image)
         filter_path = os.path.join(settings.CLUT_DIR, image.film)
         filter = Image.open((filter_path))
         print(filter_path)
         if "Black and White" in filter_path:
-            filtered.append(apply_filter(filter, image.convert('L'), True))
+            filtered.append(apply_filter(filter, image_open.convert('L'), True))
         if "ASCII" in filter_path:
-            apply_ascii(image)
+            apply_ascii(image_open)
         else:
-            filtered.append(apply_filter(filter, image))
+            filtered.append(apply_filter(filter, image_open))
     return filtered
     
 def apply_filter(hald_img, img, is_monochrome=False):
@@ -184,13 +185,6 @@ class UploadImageForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['film'].widget.attrs['class'] = 'bold-select-box'
 
-class DisplayImagesForm(forms.Form):
-    session_key = forms.CharField(max_length=200)
-    switches_string = forms.CharField(
-        label="List of boolean 'switches' (comma-separated)",
-        validators=[validate_boolean_list_string]
-    )
-
 class UploadCLUTForm(forms.ModelForm):
     class Meta:
         model = CLUTUpload
@@ -211,14 +205,14 @@ class UploadCLUTForm(forms.ModelForm):
 
 #TODO takes one or optionally two images and extracts a CLUT from the difference between them usng extract_CLUT.sh
 # if only one image is passed, it will use the default image provided as the second image to extract the CLUT from
-class GenerateCLUTForm(forms.ModelForm):
+class CreateCLUTForm(forms.ModelForm):
     class Meta:
-        model = CLUTGenerate
-        fields = ('sample', 'identity', 'info') # or list specific fields
+        model = CLUTCreator
+        fields = ('sample', 'identity', 'filename') # or list specific fields
         labels = {
             "sample" : "The target image (the look you want to clone):",
             "identity" : "The identity image (the baseline):",
-            "info": "Any additional information:"
+            "filename": "CLUT Filename:"
         }
         widgets = {
             "sample" : forms.ClearableFileInput(attrs={'class':'form-control form-control-lg', 'placeholder':'images' }),
@@ -289,7 +283,7 @@ def display_images(request, session_key=None, switches=[]):
                 return redirect('key_images', session_key=key) # Redirect to a success page
         else:
             print("Invalid form data:", form.errors)
-            return redirect('images_create') #redirect back to upload page
+            return redirect('images') #redirect back to upload page
     
     key_images = ImageUpload.objects.filter(session_key=key)
     filtered = filtered_images(key_images)
@@ -318,14 +312,13 @@ def delete_clut(request, session_key=None, pk=None, name=None):
     #TODO: Add a check to ensure that the session key matches the current user's session key for security,
     # if not prompt for password
     if pk == None and name == None:
-        CLUTGenerate.objects.filter(session_key=key).delete()
+        CLUTCreator.objects.filter(session_key=key).delete()
     elif pk != None:
-        CLUTGenerate.objects.filter(session_key=key, pk=pk).delete()
+        CLUTCreator.objects.filter(session_key=key, pk=pk).delete()
     elif name != None:
-        CLUTGenerate.objects.filter(session_key=key, name=name).delete()
+        CLUTCreator.objects.filter(session_key=key, name=name).delete()
     return redirect('key_images', session_key=key)
-
-#TODO rename to create_and_display_cluts  
+ 
 def display_cluts(request, session_key=None, print_benchmarks=True):
     key = request.GET.get('key', None)
     if key is None:
@@ -337,29 +330,24 @@ def display_cluts(request, session_key=None, print_benchmarks=True):
         else:
             key = session_key
     print(f"Session Key: {key}")
-
  
     if request.method == 'POST':
         #instatiate form
-        form = GenerateCLUTForm(request.POST, request.FILES)
+        form = CreateCLUTForm(request.POST, request.FILES)
         if form.is_valid():
             instance = form.save(commit=False) # Don't save to DB yet
-            #instance.session_key = Session.objects.get(session_key=key)
-            
-            try:
-                instance.session_key = Session.objects.get(session_key=key)
-            except Session.DoesNotExist:
-                # Handle edge case where session expired mid-request
-                return redirect('error_page')
+            short_id = str(instance.id_slug).replace('-', '')[:8]
+            filename = instance.filename
+            instance.session_key = Session.objects.get(session_key=key) # Auto-populate 'user' field with current user
 
             # 1. Define paths and save uploaded files to disk safely
             sample_file = request.FILES['sample']
             identity_file = request.FILES['identity']
             
             # Use safe file naming to prevent path traversal issues
-            sample_rel_path = f'session/{key}/sample/{sample_file.name}'
-            identity_rel_path = f'session/{key}/identity/{identity_file.name}'
-            clut_rel_path = f'session/{key}/clut/clut.png'
+            sample_rel_path = f'session/{key}/generated/{short_id}/samples/{sample_file.name}'
+            identity_rel_path = f'session/{key}/generated/{short_id}/identities/{identity_file.name}'
+            clut_rel_path = f'session/{key}/generated/{short_id}/cluts/clut.png' #TODO replace with filename
 
             # Save uploaded files into Django's storage system
             sample_path = default_storage.save(sample_rel_path, ContentFile(sample_file.read()))
@@ -404,30 +392,30 @@ def display_cluts(request, session_key=None, print_benchmarks=True):
                 execution_time = time.perf_counter() - start_time
                 if print_benchmarks:
                     print(f"[BENCHMARK] CRITICAL: Script timed out and was killed after {execution_time:.3f} seconds.")
-                return redirect('error_page')
+                #return redirect('error_page')
 
             except subprocess.CalledProcessError as e:
                 execution_time = time.perf_counter() - start_time
                 if print_benchmarks:
                     print(f"[BENCHMARK] ERROR: Script failed after {execution_time:.3f} seconds.")
                     print(f"[BENCHMARK] Stderr output: {e.stderr}")
-                return redirect('error_page')     
+                #return redirect('error_page')     
         else:
             print("Invalid form data:", form.errors)
             return redirect('cluts') # TODO: redirect to error page
     else:
-        form = GenerateCLUTForm()
-    key_cluts = CLUTGenerate.objects.filter(session_key=key)
+        form = CreateCLUTForm()
+    key_cluts = CLUTCreator.objects.filter(session_key=key)
     print(len(key_cluts))
     #create context and render form - maybe unecessary
-    form = GenerateCLUTForm()
+    form = CreateCLUTForm()
     context = {'key': key,
                 'cluts': key_cluts,
                 'form': form
             }
     return render(request, 'clut_dashboard.html', context) #change  form into context
 
-def upload_clut(request, session_key=None):
+def create_clut(request, session_key=None):
     #The Recommended Architecture if you want to use Celery (Asynchronous)
     # If the Bash script takes more than 2 seconds, you should implement an asynchronous pattern
     # .1 Django View Saves sample and identity using default model handling
@@ -481,7 +469,7 @@ def upload_clut(request, session_key=None):
   
         else:
             print("Invalid form data:", form.errors)
-            return redirect('upload_clut')
+            return redirect('create_clut')
     else:
         form = UploadCLUTForm()
     return render(request, 'clut.html', {'form': form})
@@ -491,34 +479,3 @@ def donate(request):
 
 def about(request):
     return render(request, 'about.html')
-
-#TODO save this snippet
-def generic_image_upload(request, form_class, redirect_to):
-    """
-    Generic view for handling a ModelForm upload.
-
-    Args:
-        request: The Django request object.
-        form_class: The form class to instantiate.
-        redirect_to: A Django URL name or URL to redirect to after success.
-    """
-    if not request.session.session_key:
-        request.session.save()
-
-    key = request.session.session_key
-
-    if request.method == "POST":
-        form = form_class(request.POST, request.FILES)
-
-        if form.is_valid():
-            instance = form.save(commit=False)
-            instance.session_key = Session.objects.get(session_key=key)
-            instance.save()
-
-            return redirect(redirect_to)
-
-        print("Invalid form data:", form.errors)
-    else:
-        form = form_class()
-
-    return render(request, "imageForm.html", {"form": form})

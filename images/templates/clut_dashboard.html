@@ -7,7 +7,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="dark light">
-  <title>{% block title %}Django Film Filters{% endblock %}</title>
+  <title>{% block title %}Your haldCLUTs{% endblock %}</title>
   
   <!-- SASS stylesheets go here in the head -->
   {% load static %}
@@ -19,10 +19,10 @@
 <body>
   <div class="app">
 
-    <h1>Your CLUT Dashboard/Gallery</h1><br>
+    <h1>Your haldCLUTs</h1><br>
     {% if key %}
         <p>Your ID: {{key}}</p>
-        <p>Keep this ID (or your link) if you want to find your CLUTs online again.</p>
+        <p>Keep this ID (or your link) if you want to find your haldCLUTs online again.</p>
     {% endif %}
 
     {% if cluts %}
@@ -49,7 +49,7 @@
                         <button class="btn btn-warning" href="{{ clut.clut.url }}" download>Download HaldCLUT</button>
                     </li> 
                     <br>
-                    <p>Info: {{ clut.info }}</p>
+                    <p>Info: {{ clut.filename }}</p>
                     <br>
                     <p>Date: {{ clut.created_at }}</p>
                     <br>
