@@ -10,7 +10,7 @@ from PIL import Image
 from django import forms
 from .models import ImageUpload, CLUTUpload, CLUTCreator #models for: images, cluts, and created cluts.
 from django.conf import settings
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.core.files import File
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
@@ -19,6 +19,7 @@ from django.core.exceptions import ValidationError
 from django.utils.safestring import mark_safe
 from django.core.files.base import ContentFile
 from pathlib import Path
+from django.views.decorators.http import require_POST
 
 #TODO: implement ascii filter
 def apply_ascii():
@@ -225,14 +226,34 @@ class CreateCLUTForm(forms.ModelForm):
                     self.fields['clut'].required = False
 
 #VIEWS
+@require_POST
+def delete_image_handler(request, session_key, pk=None):
+    #handles delete, and delete all buttons for the image list page.
+    if pk is not None:
+        # pk = str(pk).replace('-', '')[:8]
+        print(f"Deleting image with pk: {pk} for session_key: {session_key}")
+        sub_item = get_object_or_404(ImageUpload, session_key=session_key, pk=pk)
+        sub_item.delete()
+        print(f"Deleted image with pk: {pk}")
+        #messages.success(ImageUpload, "Single image successfully deleted.")
+    else:
+        item = get_object_or_404(ImageUpload, session_key=session_key)
+        item.delete()  # Assumes on_delete=models.CASCADE in the model
+        print(f"Deleted all images for key: {session_key}")
+        #messages.success(request, "Parent item and all sub-items successfully deleted.")
+        
+    return redirect('images')
+
 def delete_image(request, session_key, pk=None, name=None):
     key = session_key
-    #TODO: Add a check to ensure that the session key matches the current user's session key for security,
-    # if not prompt for password
     if pk == None and name == None:
         ImageUpload.objects.filter(session_key=key).delete()
     elif pk != None:
-        ImageUpload.objects.filter(session_key=key, pk=pk).delete()
+        #TODO: Add a check to ensure that the session key matches the current user's session key for security,
+        # if not prompt for password
+        print("not finished")
+        ImageUpload.objects.filter(session_key=pk).delete()
+    #     ImageUpload.objects.filter(session_key=key, pk=pk).delete()
     elif name != None:
         ImageUpload.objects.filter(session_key=key, name=name).delete()
     return redirect('key_images', session_key=key)
@@ -259,9 +280,9 @@ def display_images(request, session_key=None, switches=[]):
             instance = form.save(commit=False) # Don't save yet
             instance.session_key =  Session.objects.get(session_key=key) # Auto-populate 'user' field with current user
             #instatiate filtered image from each image and filter pair
-            for filename, file in request.FILES.items(): #TODO FIX filename is the prop name, name is the file name
+            for filename, file in request.FILES.items():
                 name = request.FILES[filename].name
-                open_image = Image.open(file) #TODO rename
+                open_image = Image.open(file) 
                 film_choice = form.cleaned_data['film']
                 is_cleaned = os.path.exists(film_choice)
                 if not is_cleaned:
@@ -336,7 +357,7 @@ def display_cluts(request, session_key=None, print_benchmarks=True):
         form = CreateCLUTForm(request.POST, request.FILES)
         if form.is_valid():
             instance = form.save(commit=False) # Don't save to DB yet
-            short_id = str(instance.id_slug).replace('-', '')[:8]
+            short_id = str(instance.short_id).replace('-', '')[:8]
             filename = instance.filename
             instance.session_key = Session.objects.get(session_key=key) # Auto-populate 'user' field with current user
 
