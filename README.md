@@ -15,7 +15,7 @@ mkdir CLUT/Black\ and\ White;
 cp -r hald-clut/HaldCLUT/Film\ Simulation/Color/* CLUT/Color ;
 cp -r hald-clut/HaldCLUT/Film\ Simulation/Black\ and\ White/* CLUT/Black\ and\ White ;
 #optional, remove the hald-clut repo
-rm -R hald-clut
+rm -R hald-clut;
 cd CLUT/Color;
 find . -type f -exec mv -t . {} +;
 rmdir */

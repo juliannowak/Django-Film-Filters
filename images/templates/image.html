@@ -46,15 +46,17 @@
               <li>
                 <h4>Image #{{forloop.counter}} (unfiltered): {{ image.name }}</h4><br>
                 <img onclick="switchFilter('{{forloop.counter0}}', '{{switches}}')" width=480 src="{{ image.image.url }}" alt="{{ image.name }}">
+
                 <form action="{% url 'delete_image' key %}" method="POST" style="display:inline;" 
-                      onsubmit="return confirm('Are you sure you want to delete this item and ALL sub-items?');">
+                      onsubmit="return confirm('Are you sure you want to delete this ALL images?');">
                   {% csrf_token %}
-                  <button type="submit" class="btn-delete-all">Delete All</button>
+                  <button type="submit" class="btn-delete-all btn-danger">Delete All</button>
+                
                 </form>
-                <form action="{% url 'delete_image' key item.pk %}" method="POST" style="display:inline;" 
+                <form action="{% url 'delete_image' key image.pk %}" method="POST" style="display:inline;" 
                       onsubmit="return confirm('Are you sure you want to delete this image?');">
                   {% csrf_token %}
-                  <button type="submit" class="btn-delete-all">Delete Image</button>
+                  <button type="submit" class="btn-delete-image btn-danger">Delete Image</button>
                 </form>
                 
                 <!-- <button class="btn btn-danger" onclick="deleteImage('{{key}}', '{{image.short_id}}')">Delete</button> -->
