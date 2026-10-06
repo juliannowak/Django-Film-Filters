@@ -8,7 +8,6 @@ import glob
 import os
 import uuid
 
-
 def get_film_choices():
     names = ["Color"]
     files = ["1"]
@@ -27,7 +26,6 @@ def get_film_choices():
     print(len(file_map.keys()))
     return file_map
 
-
 def validate_film_choice(value):
     if not isinstance(value, str):
         raise ValidationError("This field must be a string of characters.")
@@ -38,38 +36,28 @@ def validate_film_choice(value):
             f"{value} is not an film. It is just there to seperate Color from Black and White.")
 
 # media file upload paths
-
-
 def image_directory_path(instance, filename):
     short_id = str(instance.short_id).replace('-', '')[:8]
     return os.path.join('session', str(instance.session_key), 'images', short_id, filename)
 
-
 def uploaded_clut_directory_path(instance, filename):
-
     short_id = str(instance.short_id).replace('-', '')[:8]
     return os.path.join('session', str(instance.session_key), 'cluts', short_id, 'user_uploads', filename)
 
 # these are for generated cluts, samples, and identities
-
-
 def sample_directory_path(instance, filename):
     short_id = str(instance.short_id).replace('-', '')[:8]
     return os.path.join('session', str(instance.session_key), 'generated', short_id, 'samples', filename)
 
-
 def identity_directory_path(instance, filename):
     short_id = str(instance.short_id).replace('-', '')[:8]
     return os.path.join('session', str(instance.session_key), 'generated', short_id, 'identities', filename)
-
 
 def clut_directory_path(instance, filename):
     short_id = str(instance.short_id).replace('-', '')[:8]
     return os.path.join('session', str(instance.session_key), 'generated', short_id, 'cluts', filename)
 
 # models for uploaded images and cluts TODO remove name or short_id, only one needed
-
-
 class ImageUpload(models.Model):
     short_id = models.UUIDField(
         default=uuid.uuid4, editable=False, unique=True)
@@ -88,7 +76,6 @@ class ImageUpload(models.Model):
 
         return f'{self.name}'
 
-
 class CLUTUpload(models.Model):
     short_id = models.UUIDField(
         default=uuid.uuid4, editable=False, unique=True)
@@ -106,13 +93,11 @@ class CLUTUpload(models.Model):
         return f'{self.film} {self.exposure}'
 
 # models for generated cluts, samples, and identities
-
-
 class CLUTCreator(models.Model):
     short_id = models.UUIDField(
         default=uuid.uuid4, editable=False, unique=True)
-    session_key = models.ForeignKey(
-        Session, on_delete=models.SET_NULL, blank=True, null=True)
+    session_key = models.CharField(
+        max_length=40, db_index=True, null=True, blank=True)
     clut = models.ImageField(
         upload_to=clut_directory_path, blank=True, null=True)
     sample = models.ImageField(upload_to=sample_directory_path, default=None)
