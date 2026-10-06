@@ -121,19 +121,39 @@ form {
   }
 }
 
-li .clut-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 20px; // Space between each CLUT item
+.clut-list {
+  width: 100%;
 }
 
-li .clut-images {
+.clut-item {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding: 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.cluts-wrapper {
+  width: 100%;
+  max-width: 800px;  // Keep it tight on mobile, adjust as needed
+  margin: 0 auto;
+}
+
+.clut-images {
   display: flex;
   flex-direction: row;
-  gap: 0px; // Space between images
-  justify-content: center; // Center the images horizontally
-  margin-top: 10px; // Space above the images
+  flex-wrap: wrap;
+  gap: 16px;
+  // align-items: flex-start;
+}
+
+.clut-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 240px;
 }
 
 /* Update your CSS to target only that specific class */
