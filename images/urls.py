@@ -1,4 +1,6 @@
 from django.urls import path
+from django.contrib.staticfiles.storage import staticfiles_storage
+from django.views.generic.base import RedirectView
 from . import views
 from pathlib import Path
 from django.http import HttpResponse
@@ -23,5 +25,6 @@ urlpatterns = [
     path('create/', views.upload_clut, name='create_clut'),
     path('donate/', views.donate, name='donate'),
     path('about/', views.about, name='about'),
+    path('favicon.ico', RedirectView.as_view(url=staticfiles_storage.url('images/favicon.ico'))),
 
 ]

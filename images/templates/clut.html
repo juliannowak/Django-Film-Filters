@@ -51,24 +51,22 @@
                                 <img width="240" src="{{ clut.identity.url }}"
                                     alt="Picture of Identity #{{ forloop.counter }}">
                             </div>
-
-                            <div class="clut-card">
-                                <h3>HaldCLUT #{{ forloop.counter }}</h3>
-                                <img width="240" src="{{ clut.clut.url }}"
-                                    alt="Picture of HaldCLUT #{{ forloop.counter }}">
-
-                            </div>
                         </div>
 
-                        <p>Info: {{ clut.filename }}</p>
-                        <p>Date: {{ clut.created_at }}</p>
-                        <button class="btn btn-warning" href="{{ clut.clut.url }}" download>Download
-                            HaldCLUT</button>
-                        <button class="btn btn-warning" href="{{ clut.sample.url }}" download>Download
-                            Sample</button>
-                        <button class="btn btn-warning" href="{{ clut.identity.url }}" download>Download
-                            Identity</button>
-                        <button class="btn btn-danger" onclick="deleteCLUT('{{key}}', '{{clut.pk}}')">Delete</button>
+                        <h3>Info: {{ clut.filename }}</h3>
+                        <h3>Date: {{ clut.created_at }}</h3>
+
+                        <form action="{% url 'delete_clut' key clut.pk %}" method="POST" style="display:inline;"
+                            onsubmit="return confirm('Are you sure you want to delete this clut?');">
+                            <button class="btn btn-warning" href="{{ clut.clut.url }}" download>Download
+                                HaldCLUT</button>
+                            <button class="btn btn-warning" href="{{ clut.sample.url }}" download>Download
+                                Sample</button>
+                            <button class="btn btn-warning" href="{{ clut.identity.url }}" download>Download
+                                Identity</button>
+                            {% csrf_token %}
+                            <button type="submit" class="btn-delete-clut btn btn-danger">Delete CLUT</button>
+                        </form>
                     </div>
                     {% endfor %}
                 </div>

@@ -154,6 +154,8 @@ form {
   flex-direction: column;
   gap: 8px;
   min-width: 240px;
+  flex: 1;           // Add this
+  flex-shrink: 1;    
 }
 
 /* Update your CSS to target only that specific class */

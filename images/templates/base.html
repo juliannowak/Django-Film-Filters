@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    {% load django_bootstrap5 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark light">
+
+    <!-- SASS stylesheets go here in the head -->
+    {% load static %}
+    {% load sass_tags %}
+    <link href="{% static 'bootstrap.min.css' %}" rel="stylesheet" type="text/css" />
+    <link href="{% sass_src 'main.scss' %}" rel="stylesheet" type="text/css" />
+
+    <!-- Standard Favicon -->
+    <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
+    <!-- PNG sizes for high-res displays -->
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'images/favicon-16x16.png' %}">
+
+    <!-- Define a title block with a default fallback -->
+    <title>{% block title %}My Default Site Title{% endblock %}</title>
+
+
+    <!-- Define a block for page-specific CSS or meta tags -->
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body>
+    {% block content %}{% endblock %}
+</body>
+
+</html>

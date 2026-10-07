@@ -1,22 +1,15 @@
 <!--images: key, images, switches, forms-->
-<head>
-  {% load django_bootstrap5 %}
-  {% bootstrap_css %}
-  {% bootstrap_javascript %}
+{% extends "base.html" %}
+{% load static %}
+{% load sass_tags %}
 
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="dark light">
-  <title>{% block title %}Your Images{% endblock %}</title>
-  
-  <!-- SASS stylesheets go here in the head -->
-  {% load static %}
-  {% load sass_tags %}
-  <link href="{% static 'bootstrap.min.css' %}" rel="stylesheet" type="text/css"/>
-  <link href="{% sass_src 'main.scss' %}" rel="stylesheet" type="text/css" />
+{% block title %}Your Images{% endblock %}
 
-</head>
-<body>
+{% block extra_head %}
+<meta name="description" content="This page is for uploading and managing your images.">
+{% endblock %}
+
+{% block content %}
   <div class="app">
     <!-- Make accessible to main.js -->
     {{ switches|json_script:"my-switches" }}
@@ -24,62 +17,65 @@
 
     <h1>Your Images</h1><br>
     {% if key %}
-      <p>Your ID: {{key}}</p>
-      <p>Keep this ID (or your link) if you want to find your images online again.</p>
+    <p>Your ID: {{key}}</p>
+    <p>Keep this ID (or your link) if you want to find your images online again.</p>
     {% endif %}
 
     {% if images %}
-      <ul>
-        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
-          Show Images
-        </button>
-        
-        <div class="collapse" id="collapseExample">
-          <p>Click or tap the images to switch between filtered and non-filtered</p>
-          
-          <form action="{% url 'delete_image' key %}" method="POST" style="display:inline;" 
-                onsubmit="return confirm('Are you sure you want to delete ALL of the images?');">
-            {% csrf_token %}
-            <button type="submit" class="btn-delete-all btn btn-danger">Delete All</button>
+    <ul>
+      <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample"
+        aria-expanded="false" aria-controls="collapseExample">
+        Show Images
+      </button>
+
+      <div class="collapse" id="collapseExample">
+        <p>Click or tap the images to switch between filtered and non-filtered</p>
+
+        <form action="{% url 'delete_image' key %}" method="POST" style="display:inline;"
+          onsubmit="return confirm('Are you sure you want to delete ALL of the images?');">
+          {% csrf_token %}
+          <button type="submit" class="btn-delete-all btn btn-danger">Delete All</button>
+        </form>
+
+        {% for image, filtered, switch in images %}
+        {% if switch %}
+        <li>
+          <h4>Image #{{forloop.counter}} (filtered): {{ image.name }}</h4><br>
+          <img onclick="switchFilter('{{forloop.counter0}}', '{{switches}}')" width=480 src="{{ image.filtered.url }}"
+            alt="{{ image.name }}">
+        </li>
+        {% else %}
+        <li>
+          <h4>Image #{{forloop.counter}} (unfiltered): {{ image.name }}</h4><br>
+          <img onclick="switchFilter('{{forloop.counter0}}', '{{switches}}')" width=480 src="{{ image.image.url }}"
+            alt="{{ image.name }}">
+
           </form>
-          
-          {% for image, filtered, switch in images %}
-            {% if switch %}
-              <li>
-                <h4>Image #{{forloop.counter}} (filtered): {{ image.name }}</h4><br>
-                <img onclick="switchFilter('{{forloop.counter0}}', '{{switches}}')" width=480 src="{{ image.filtered.url }}" alt="{{ image.name }}">
-              </li>
-            {% else %}
-              <li>
-                <h4>Image #{{forloop.counter}} (unfiltered): {{ image.name }}</h4><br>
-                <img onclick="switchFilter('{{forloop.counter0}}', '{{switches}}')" width=480 src="{{ image.image.url }}" alt="{{ image.name }}">
-                
-                </form>
-                <form action="{% url 'delete_image' key image.pk %}" method="POST" style="display:inline;" 
-                      onsubmit="return confirm('Are you sure you want to delete this image?');">
-                  {% csrf_token %}
-                  <button type="submit" class="btn-delete-image btn btn-danger">Delete Image</button>
-                </form>
-              </li>
-            {% endif %}
-          {% endfor %}
-        </div>
-      </ul>
+          <form action="{% url 'delete_image' key image.pk %}" method="POST" style="display:inline;"
+            onsubmit="return confirm('Are you sure you want to delete this image?');">
+            {% csrf_token %}
+            <button type="submit" class="btn-delete-image btn btn-danger">Delete Image</button>
+          </form>
+        </li>
+        {% endif %}
+        {% endfor %}
+      </div>
+    </ul>
     {% else %}
-      <p>No images found.<br>Please upload an image to begin</p>
+    <p>No images found.<br>Please upload an image to begin</p>
     {% endif %}
 
     <h1>Upload Form</h1><br>
     <form action="" method="post" class="row g-3 pb-4" enctype="multipart/form-data">
       {% csrf_token %}
       {% if form.errors %}
-        <div class="error-banner">
-            <p>Please correct the errors below:</p>
-            {{ form.errors }}
-        </div>
+      <div class="error-banner">
+        <p>Please correct the errors below:</p>
+        {{ form.errors }}
+      </div>
       {% endif %}
       <table>
-          {{ form.as_table }}
+        {{ form.as_table }}
       </table>
       <input type="submit" value="Submit">
     </form>
@@ -89,6 +85,6 @@
       <a href="https://github.com/juliannowak/Django-Film-Filters">⌨️ Check Out The Project On GitHub</a>
     </footer>
   </div>
-  
+
   <script src="{% static 'main.js' %}"></script>
-</body>
+{% endblock %}

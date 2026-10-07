@@ -53,8 +53,10 @@ python manage.py runserver;
 
 ## TODOs:
 - Implement fetch API
+- add password to CLUT/ImageUpload models and 
+    lock changes to session behind it 
+    when it's not the active one
 - Docker support
-- pre_deploy script - fix secret_key generation
 - image2ascii support - add a blank file to CLUT folder and catch the filter
-- lock session changes behind password
-- fix CLUTUpload.exposure validator
+- fix collapseable button placement
+- refactor templates to extend from base.html

@@ -298,17 +298,16 @@ class UploadCLUTForm(forms.ModelForm):
 
         self.fields["film"].widget.attrs["class"] = "bold-select-box"
 
-# TODO takes one or optionally two images and extracts a CLUT from the difference between them usng extract_CLUT.sh
-# if only one image is passed, it will use the default image provided as the second image to extract the CLUT from
 class CreateCLUTForm(forms.ModelForm):
     class Meta:
         model = CLUTCreator
 
-        fields = ("sample", "identity", "filename")  # or list specific fields
+        fields = ("sample", "identity", "filename")
 
         labels = {
-            "sample": "The target image (the look you want to clone):",
-            "identity": "The identity image (the baseline):",
+            
+            "sample": mark_safe("The Target Image</br>(the look you want to clone):"),
+            "identity": mark_safe("The Identity Image </br>(the unfiltered baseline):"),
             "filename": "CLUT Filename:",
         }
 

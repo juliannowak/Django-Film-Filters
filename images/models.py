@@ -86,7 +86,7 @@ class CLUTUpload(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     film = models.CharField(max_length=200, blank=False,
                             null=False, default=None)
-    exposure = models.FloatField()
+    exposure = models.SmallIntegerField()
     info = models.CharField(max_length=200)
 
     def __str__(self):
