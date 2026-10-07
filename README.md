@@ -57,6 +57,5 @@ python manage.py runserver;
     lock changes to session behind it 
     when it's not the active one
 - Docker support
-- image2ascii support - add a blank file to CLUT folder and catch the filter
+- image2ascii support - add a hidden ascii generator
 - fix collapseable button placement
-- refactor templates to extend from base.html
