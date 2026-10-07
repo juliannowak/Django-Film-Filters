@@ -1,16 +1,12 @@
+<!--images: key, images, switches, forms-->
 {% extends "base.html" %}
-{% load django_bootstrap5 %}
 {% load static %}
 {% load sass_tags %}
 
 {% block title %}Your haldCLUTs{% endblock %}
 
 {% block extra_head %}
-    {% bootstrap_css %}
-    {% bootstrap_javascript %}
-
-    <link href="{% static 'bootstrap.min.css' %}" rel="stylesheet" type="text/css" />
-    <link href="{% sass_src 'main.scss' %}" rel="stylesheet" type="text/css" />
+<meta name="description" content="This page is for uploading and managing your haldCLUTs.">
 {% endblock %}
 
 {% block content %}
@@ -117,4 +113,5 @@
         <a href="https://github.com/juliannowak/Django-Film-Filters">⌨️ Check Out The Project On GitHub</a>
     </footer>
 </div>
+
 {% endblock %}

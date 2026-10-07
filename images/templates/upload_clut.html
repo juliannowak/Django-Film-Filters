@@ -1,16 +1,11 @@
 {% extends "base.html" %}
-{% load django_bootstrap5 %}
 {% load static %}
 {% load sass_tags %}
 
 {% block title %}Contribute a HaldCLUT{% endblock %}
 
 {% block extra_head %}
-    {% bootstrap_css %}
-    {% bootstrap_javascript %}
-
-    <link href="{% static 'bootstrap.min.css' %}" rel="stylesheet" type="text/css" />
-    <link href="{% sass_src 'main.scss' %}" rel="stylesheet" type="text/css" />
+<meta name="description" content="This page is for contributing a HaldCLUT to the project.">
 {% endblock %}
 
 {% block content %}
