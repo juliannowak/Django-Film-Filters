@@ -106,12 +106,9 @@
         </table>
         <input type="submit" value="Submit">
     </form>
-
-    <footer>
-        <a href="/about">🎞️ Help Us Grow: Contribute Your Own Film Styles</a>
-        <a href="/donate">💸 Help Me Grow: Donate</a>
-        <a href="https://github.com/juliannowak/Django-Film-Filters">⌨️ Check Out The Project On GitHub</a>
-    </footer>
+    {% block extra_footer %}
+    <a href="/images">Your Image Gallery</a>
+    {% endblock %}
 </div>
 
 {% endblock %}

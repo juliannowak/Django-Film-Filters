@@ -15,16 +15,20 @@ body html {
 }
 
 footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    
     display: flex;
-    /* 1. Changed to row so items sit side-by-side */
     flex-direction: row; 
     align-items: center;
     justify-content: center;
-    /* 2. Reduced gap slightly to account for padding around the bars */
     gap: 15px; 
-    margin-top: 20px;
     padding: 20px;
     font-size: #{"clamp(0.8rem, 0.7rem + 0.5vw, 1rem)"};
+    background: linear-gradient(90deg, rgba(57, 203, 251, 0.95), rgba(232, 50, 131, 0.95));
     
     a {
         text-decoration: none;
@@ -32,20 +36,16 @@ footer {
         display: inline-flex;
         align-items: center;
 
-        /* 3. Target every link EXCEPT the very last one */
         &:not(:last-child)::after {
-            /* 4. This creates the vertical bar separator */
             content: "|"; 
-            /* 5. Pushes the bar perfectly between the links */
             margin-left: 15px; 
-            /* 6. Makes the bar slightly translucent so it doesn't look harsh */
             opacity: 0.5; 
             color: $primary-emphasis;
         }
     }
 
     &:hover {
-    color: $secondary-emphasis;
+        color: $secondary-emphasis;
     }
 }
 

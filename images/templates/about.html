@@ -1,22 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  {% load django_bootstrap5 %}
-    {% bootstrap_css %}
-    {% bootstrap_javascript %}
+{% extends "base.html" %}
+{% load static %}
+{% load sass_tags %}
 
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About App</title>
-    
-    <!-- SASS stylesheets go here in the head -->
-    {% load static %}
-    {% load sass_tags %}
-    <link href="{% static 'bootstrap.min.css' %}" rel="stylesheet" type="text/css"/>
-    <link href="{% sass_src 'main.scss' %}" rel="stylesheet" type="text/css" />  
+{% block title %}About App{% endblock %}
 
-</head>
-<body\>
+{% block extra_head %}
+<meta name="description" content="This page is an about page.">
+{% endblock %}
+
+{% block content %}
   <h1>About App</h1>
 
   <p>
@@ -63,11 +55,11 @@
       </li>
     </ul>
   </details>
+{% endblock %}
   
-  <footer>
-            <a href="/about">🎞️ Help Us Grow: Contribute Your Own Film Styles</a>
-            <a href="/donate">💸 Help Me Grow: Donate</a>
-            <a href="https://github.com/juliannowak/Django-Film-Filters">⌨️ Check Out The Project On GitHub</a>
-  </footer>
+  {% block extra_footer %}
+  <a href="/images">Your Image Gallery</a>
+  <a href="/cluts">Your HALD-CLUT Gallery</a>
+  {% endblock %}
 </body>
 </html>
