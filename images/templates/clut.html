@@ -10,8 +10,6 @@
 {% endblock %}
 
 {% block content %}
-<div class="app">
-
     <h1>Your haldCLUTs</h1><br>
 
     {% if key %}
@@ -26,7 +24,7 @@
                     data-bs-target="#collapseExample2" aria-expanded="false" aria-controls="collapseExample2">
                     Show CLUTs
                 </button>
-
+                
                 <div class="collapse" id="collapseExample2">
                     {% for clut in cluts %}
                         <div class="clut-item">
@@ -49,6 +47,7 @@
 
                             <form action="{% url 'delete_clut' key clut.pk %}" method="POST" style="display:inline;"
                                 onsubmit="return confirm('Are you sure you want to delete this clut?');">
+                                <br>
                                 <button class="btn btn-warning" type="button" onclick="location.href='{{ clut.clut.url }}'" download>
                                     Download HaldCLUT
                                 </button>
@@ -70,12 +69,11 @@
     {% else %}
         <p>No CLUTs found.<br>Please upload a CLUT to begin</p>
     {% endif %}
-
+    
     <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample"
         aria-expanded="false" aria-controls="collapseExample">
         Contributor Instructions: Creating a HaldCLUT from Film
     </button>
-
     <div class="collapse" id="collapseExample">
         To generate an accurate HaldCLUT file, our software needs to compare two photos of the exact same scene: the
         target picture (the look you want to clone) and a neutral reference picture (the baseline).
@@ -97,7 +95,8 @@
         Thank you! Your submissions directly help us provide more accurate, high-quality HaldCLUTs to creators
         around the world.
     </div>
-
+    
+    <h1>Upload Form</h1><br>
     <form action="" method="post" class="row g-3 pb-4" enctype="multipart/form-data">
         {% csrf_token %}
         <br>
@@ -107,8 +106,7 @@
         <input type="submit" value="Submit">
     </form>
     {% block extra_footer %}
-    <a href="/images">Your Image Gallery</a>
+    <a href="/images"> 🖼️ Your Image Gallery</a>
     {% endblock %}
-</div>
 
 {% endblock %}

@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     {% load django_bootstrap5 %}
     {% bootstrap_css %}
@@ -31,8 +30,9 @@
 </head>
 
 <body>
-    
-    {% block content %}{% endblock %}
+    <div class="app">
+        {% block content %}{% endblock %}
+    </div>
 
     <footer>
         <a href="/about">🎞️ Help Us Grow: Contribute Your Own Film Styles</a>

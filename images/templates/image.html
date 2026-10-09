@@ -10,7 +10,6 @@
 {% endblock %}
 
 {% block content %}
-  <div class="app">
     <!-- Make accessible to main.js -->
     {{ switches|json_script:"my-switches" }}
     {{ images.0.session_key|json_script:"my-session-key" }}
@@ -27,7 +26,7 @@
         aria-expanded="false" aria-controls="collapseExample">
         Show Images
       </button>
-
+      <br><br>
       <div class="collapse" id="collapseExample">
         <p>Click or tap the images to switch between filtered and non-filtered</p>
 
@@ -80,9 +79,8 @@
       <input type="submit" value="Submit">
     </form>
     {% block extra_footer %}
-    <a href="/cluts">Your HALD-CLUT Gallery</a>
+    <a href="/cluts">🖼️ Your HALD-CLUT Gallery</a>
     {% endblock %}
-  </div>
 
   <script src="{% static 'main.js' %}"></script>
 {% endblock %}
