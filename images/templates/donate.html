@@ -91,6 +91,29 @@
         .btc-theme:hover { background: #e17e0a; }
         .eth-theme { background: #627eea; }
         .eth-theme:hover { background: #4d66d1; }
+        
+        footer {
+            background: transparent;
+            padding: 2rem;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: auto;
+        }
+
+        footer a {
+            color: #0d6efd;
+            text-decoration: none;
+            transition: color 0.2s ease;
+            white-space: nowrap;
+        }
+
+        footer a:hover {
+            color: #0a58ca;
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -119,10 +142,10 @@
         </div>
     </main>
 
-    <footer style="margin-top: auto; text-align: center;">
-            <a href="/about">🎞️ Help Us Grow: Contribute Your Own Film Styles</a>
-            <a href="/donate">💸 Help Me Grow: Donate</a>
-            <a href="https://github.com/juliannowak/Django-Film-Filters">⌨️ Check Out The Project On GitHub</a>
+    <footer>
+        <a href="/about">🎞️ Help Us Grow: Contribute Your Own Film Styles</a>
+        <a href="/donate">💸 Help Me Grow: Donate</a>
+        <a href="https://github.com/juliannowak/Django-Film-Filters">⌨️ Check Out The Project On GitHub</a>
     </footer>
 
     <script>
