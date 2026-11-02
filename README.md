@@ -53,6 +53,7 @@ python manage.py runserver;
 
 ## TODOs:
 - Implement fetch API
+- Implement Bucket Support ($USE_BUCKET)
 - add password to CLUT/ImageUpload models and 
     lock changes to session behind it 
     when it's not the active one

@@ -13,13 +13,41 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from pathlib import Path
 
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/5.2/howto/static-files/
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent
+MEDIA_URL = '/media/'
+
+# Default primary key field type
+# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+#settings for SASS Processor
+SASS_PROCESSOR_ENABLED = True
+
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'static/'
+STATICFILES_DIRS = [
+   (BASE_DIR / 'staticfiles/')
+]
+
+SASS_PROCESSOR_ROOT = BASE_DIR / 'static/'
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'sass_processor.finders.CssFinder',
+]
+
+MEDIA_ROOT = Path(os.getenv("MEDIA_DIR", BASE_DIR / "media")).resolve()
+CLUT_DIR = Path(os.getenv("CLUT_DIR", BASE_DIR / "CLUT")).resolve()
+
 FORCE_TO_SWAP = True
 # Force Django to stream files to disk instead of memory
 if FORCE_TO_SWAP:
     FILE_UPLOAD_MAX_MEMORY_SIZE = 1024  # 1 KB
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # Quick-start development settings - unsuitable for production
@@ -32,7 +60,6 @@ SECRET_KEY = 'django-insecure-gh%cz$_120&vk^*0f16wfmxu_26s9t^2q=evbi!czkpf5q@osa
 DEBUG = True
     
 ALLOWED_HOSTS = []
-
 
 # Application definition
 
@@ -118,32 +145,3 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
-
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
-
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media/'
-CLUT_DIR = BASE_DIR / 'CLUT'
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-#settings for SASS Processor
-SASS_PROCESSOR_ENABLED = True
-
-STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'static/'
-STATICFILES_DIRS = [
-   (BASE_DIR / 'staticfiles/')
-]
-
-SASS_PROCESSOR_ROOT = BASE_DIR / 'static/'
-STATICFILES_FINDERS = [
-    'django.contrib.staticfiles.finders.FileSystemFinder',
-    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-    'sass_processor.finders.CssFinder',
-]
