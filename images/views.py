@@ -752,6 +752,9 @@ def upload_clut(request, session_key=None):
 
     return render(request, "upload_clut.html", {"form": form})
 
+def asciify(request):
+    pass
+
 def donate(request):
 
     return render(request, "donate.html")

@@ -57,4 +57,3 @@ python manage.py runserver;
     lock changes to session behind it 
     when it's not the active one
 - Docker support
-- image2ascii support - add a hidden ascii generator

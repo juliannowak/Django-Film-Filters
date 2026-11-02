@@ -5,50 +5,62 @@ $info-emphasis: lightgrey;
 $secondary-emphasis: rgba(65, 215, 167, 1);
 $primary-emphasis: #5d1434;
 
-body html {
+html, body {
+  margin: 0;
+  min-height: 100%;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  background: linear-gradient(90deg, $secondary, $primary);
+}
+
+body {
+  position: relative;
+  min-height: 100vh;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: clamp("1rem, 0.9rem + 0.5vw, 1.25rem");
+  font-size: #{"clamp(1rem, 0.9rem + 0.5vw, 1.25rem)"};
   line-height: 1.6;
   font-weight: 400;
   color: $info;
-  // background-color: transparent !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 10;
-    
-    display: flex;
-    flex-direction: row; 
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  padding: 20px;
+  font-size: #{"clamp(0.8rem, 0.7rem + 0.5vw, 1rem)"};
+  background: linear-gradient(90deg, rgba(57, 203, 251, 0.95), rgba(232, 50, 131, 0.95));
+
+  a {
+    text-decoration: none;
+    color: $primary-emphasis;
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-    gap: 15px; 
-    padding: 20px;
-    font-size: #{"clamp(0.8rem, 0.7rem + 0.5vw, 1rem)"};
-    background: linear-gradient(90deg, rgba(57, 203, 251, 0.95), rgba(232, 50, 131, 0.95));
-    
-    a {
-        text-decoration: none;
-        color: $primary-emphasis;
-        display: inline-flex;
-        align-items: center;
 
-        &:not(:last-child)::after {
-            content: "|"; 
-            margin-left: 15px; 
-            opacity: 0.5; 
-            color: $primary-emphasis;
-        }
+    &:not(:last-child)::after {
+      content: "|";
+      margin-left: 15px;
+      opacity: 0.5;
+      color: $primary-emphasis;
     }
+  }
 
-    &:hover {
-        color: $secondary-emphasis;
-    }
+  &:hover {
+    color: $secondary-emphasis;
+  }
 }
-
 
 footer a {
   font-weight: bold;
@@ -57,37 +69,38 @@ footer a {
   color: $primary-emphasis;
 }
 
-// app wrapper class to ensure the gradient background covers the entire viewport and stays fixed
+// Keep layout flow normal so page can scroll
 .app {
-    position: fixed;
-    min-height: 100vh;
-    width: 100%;
-    z-index: -1;
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+  padding: #{"clamp(20px, 5%, 50px)"};
+  padding-bottom: 6rem;
+  margin: 0;
 
-    background: -webkit-linear-gradient(90deg, $secondary, $primary) !important;
-    background: linear-gradient(90deg, $secondary, $primary) !important;
-    margin: 0;
-    padding: clamp("20px, 5%, 50px");
-    
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeLegibility;
-    
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
 
-    justify-content: center; /* Horizontal */
-    align-items: center;     /* Vertical */
+  background: transparent;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 form {
   display: flex;
   flex-direction: row;
-  gap: 10px; 
+  flex-wrap: wrap;
+  gap: 10px;
   align-items: center;
-  justify-content: space-between; 
+  justify-content: space-between;
   padding: 20px;
   margin: auto;
+  max-width: 100%;
+  width: 100%;
 
   #id_image {
     position: relative;
@@ -100,51 +113,43 @@ form {
     padding: 10px 15px;
     border: 1px solid $info;
     margin-bottom: 10px;
-    width: 100%;  // Allow full width to enable shrinking
-    min-width: 0; // Override default min-width to allow below-content shrinking
-    
+    width: 100%;
+    min-width: 0;
+
     &:hover {
       background-color: darken($primary, 5%);
     }
   }
 
-  // Add table styling to ensure it scales with the form
   table {
     width: 100%;
-    border-collapse: collapse; // Optional: Makes borders cleaner if needed
+    border-collapse: collapse;
 
     td, th {
-      padding: 10px; // Match the button's padding baseline
-      font-size: inherit; // Inherit font size from form for consistency
-      text-align: left; // Optional: Align text to the left for better readability
+      padding: 10px;
+      font-size: inherit;
+      text-align: left;
     }
   }
 }
 
-
-// .cluts-wrapper {
-//   width: 100%;
-//   max-width: 800px;  // Keep it tight on mobile, adjust as needed
-//   margin: 0 auto;
-// }
-
 .cluts-wrapper {
-    width: 100%;
-    display: flex;
-    justify-content: center;
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 .clut-list {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
 }
 
 .clut-list > button {
-    display: block;
-    margin: 0 auto;
+  display: block;
+  margin: 0 auto;
 }
 
 .clut-images {
@@ -152,7 +157,6 @@ form {
   flex-direction: row;
   flex-wrap: wrap;
   gap: 16px;
-  // align-items: flex-start;
 }
 
 .clut-card {
@@ -160,11 +164,11 @@ form {
   flex-direction: column;
   gap: 8px;
   min-width: 240px;
-  flex: 1;           // Add this
-  flex-shrink: 1;    
+  flex: 1;
+  flex-shrink: 1;
 }
 
-/* Update your CSS to target only that specific class */
+/* spinner cleanup */
 .no-spinners::-webkit-outer-spin-button,
 .no-spinners::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -175,26 +179,26 @@ input[type=number].no-spinners {
   -moz-appearance: textfield;
 }
 
-.bold-select-box option:checked  {
-    font-weight: bold;
+.bold-select-box option:checked {
+  font-weight: bold;
 }
-.bold-select-box option[value="1"]  {
-    font-weight: bold;
+
+.bold-select-box option[value="1"] {
+  font-weight: bold;
 }
-.bold-select-box option[value="2"]  {
-    font-weight: bold;
+
+.bold-select-box option[value="2"] {
+  font-weight: bold;
 }
 
 @media (max-width: 1280px) {
-    //hide th elems inside tbody 
-    //unhide th elems inside theader
   form {
     font-size: 0.9rem;
     max-width: 90%;
-    
+
     table td, table th {
-      padding: 8px; // Shrink padding to match input/select
-      font-size: 0.9rem; // Explicitly set to inherit form's font-size
+      padding: 8px;
+      font-size: 0.9rem;
     }
   }
 }
@@ -205,8 +209,8 @@ input[type=number].no-spinners {
     font-size: 0.7rem;
 
     table td, table th {
-      padding: 5px; // Shrink padding to match input/select
-      font-size: 0.7rem; // Explicitly set to inherit form's font-size
+      padding: 5px;
+      font-size: 0.7rem;
     }
   }
 }
@@ -217,8 +221,8 @@ input[type=number].no-spinners {
     max-width: 100%;
 
     table td, table th {
-      padding: 3px; // Shrink padding to match input/select
-      font-size: 0.6rem; // Explicitly set to inherit form's font-size
+      padding: 3px;
+      font-size: 0.6rem;
     }
   }
 }

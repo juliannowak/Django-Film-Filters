@@ -23,6 +23,7 @@ urlpatterns = [
          views.delete_clut_handler, name='delete_clut'),
     
     path('create/', views.upload_clut, name='create_clut'),
+    path('asciify/', views.asciify, name='asciify'),
     path('donate/', views.donate, name='donate'),
     path('about/', views.about, name='about'),
     path('favicon.ico', RedirectView.as_view(url=staticfiles_storage.url('images/favicon.ico'))),
