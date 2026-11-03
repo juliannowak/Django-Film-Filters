@@ -11,16 +11,15 @@ import uuid
 def get_film_choices():
     names = ["Color"]
     files = ["1"]
-    files += glob.glob(os.path.join(os.getcwd(),
-                       settings.CLUT_DIR, "Color/*.png"), recursive=True)
+    files += glob.glob(os.path.join(settings.CLUT_DIR, "Color/*.png"), recursive=True)
     names += [os.path.basename(str(file[:-4])) for file in glob.glob(
-        os.path.join(os.getcwd(), settings.CLUT_DIR, "Color/*.png"), recursive=True)]
+        os.path.join(settings.CLUT_DIR, "Color/*.png"), recursive=True)]
     files += ["2"]
     names += ["Black and White"]
-    files += glob.glob(os.path.join(os.getcwd(), settings.CLUT_DIR,
+    files += glob.glob(os.path.join(settings.CLUT_DIR,
                        "Black and White/*.png"), recursive=True)
     names += [os.path.basename(str(file[:-4])) for file in glob.glob(os.path.join(
-        os.getcwd(), settings.CLUT_DIR, "Black_and_White/*.png"), recursive=True)]
+        settings.CLUT_DIR, "Black_and_White/*.png"), recursive=True)]
     # TODO add user uploaded cluts to the list of choices too
     file_map = dict(zip(files, names))
     print(len(file_map.keys()))
