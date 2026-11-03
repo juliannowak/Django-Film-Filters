@@ -12,6 +12,67 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 import os
 from pathlib import Path
+from django.core.exceptions import ImproperlyConfigured
+
+# Quick-start development settings - unsuitable for production
+# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = 'django-insecure-gh%cz$_120&vk^*0f16wfmxu_26s9t^2q=evbi!czkpf5q@osa'
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = os.getenv("DEBUG", "false").lower() == "true"
+    
+str_hosts = os.getenv("ALLOWED_HOSTS")
+ALLOWED_HOSTS = str_hosts.split(",") if str_hosts else []
+
+# 1. Define the required S3 variables
+S3_REQUIRED_KEYS = [
+    'BACKBLAZE_KEY_ID',
+    'BACKBLAZE_SECRET_KEY',
+    'BACKBLAZE_BUCKET_NAME',
+    'BACKBLAZE_URL',
+    'CLUT_DIR',
+    'MEDIA_DIR',
+]
+
+# 2. Check which keys are present
+present_s3_keys = [key for key in S3_REQUIRED_KEYS if os.environ.get(key)]
+
+if len(present_s3_keys) == len(S3_REQUIRED_KEYS):
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+            "OPTIONS": {
+                "access_key": present_s3_keys[0],
+                "secret_key": present_s3_keys[1],
+                "bucket_name": present_s3_keys[2],
+                "endpoint_url": present_s3_keys[3],
+                "file_overwrite": False, # Prevents folder/file collisions!
+                "default_acl": None,
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+        # Optional: If you want to use S3 for media files or CLUTs
+    }
+elif len(present_s3_keys) == 0:
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+else:
+    missing_keys = set(S3_REQUIRED_KEYS) - set(present_s3_keys)
+    raise ImproperlyConfigured(
+        f"Partial S3 configuration detected. To use S3, provide all required variables. "
+        f"Missing: {', '.join(missing_keys)}"
+    )
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -44,26 +105,14 @@ MEDIA_ROOT = Path(os.getenv("MEDIA_DIR", BASE_DIR / "media")).resolve()
 CLUT_DIR = Path(os.getenv("CLUT_DIR", BASE_DIR / "CLUT")).resolve()
 
 # Force Django to stream files to disk instead of memory
-FORCE_TO_SWAP = True
-if FORCE_TO_SWAP:
-    FILE_UPLOAD_MAX_MEMORY_SIZE = 1024  # 1 KB
-
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-gh%cz$_120&vk^*0f16wfmxu_26s9t^2q=evbi!czkpf5q@osa'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-
-DEBUG = os.getenv("DEBUG", "false").lower() == "true"
-    
-str_hosts = os.getenv("ALLOWED_HOSTS")
-ALLOWED_HOSTS = str_hosts.split(",") if str_hosts else []
+# 1. Hard cap on the request body (Accommodates files up to 50MB + metadata)
+DATA_UPLOAD_MAX_MEMORY_SIZE = 57671680  # 55 MB in bytes
+# 2. Keep this LOW. Force anything over 2.5MB straight to disk streaming.
+FILE_UPLOAD_MAX_MEMORY_SIZE = 2621440   # 2.5 MB in bytes
+# 3. Specify a temporary directory for file uploads.
+FILE_UPLOAD_TEMP_DIR = Path(os.getenv("FILE_UPLOAD_TEMP_DIR", BASE_DIR)).resolve()
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -74,6 +123,7 @@ INSTALLED_APPS = [
     'images',
     'django_bootstrap5',
     'sass_processor',
+    'storages',
 ]
 
 MIDDLEWARE = [
