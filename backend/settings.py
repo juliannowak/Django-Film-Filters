@@ -40,14 +40,17 @@ S3_REQUIRED_KEYS = [
 present_s3_keys = [key for key in S3_REQUIRED_KEYS if os.environ.get(key)]
 
 if len(present_s3_keys) == len(S3_REQUIRED_KEYS):
+    s3_options = {
+        "access_key": present_s3_keys[0],
+        "secret_key": present_s3_keys[1],
+        "bucket_name": present_s3_keys[2],
+        "endpoint_url": present_s3_keys[3],
+    }
     STORAGES = {
         "default": {
             "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
             "OPTIONS": {
-                "access_key": present_s3_keys[0],
-                "secret_key": present_s3_keys[1],
-                "bucket_name": present_s3_keys[2],
-                "endpoint_url": present_s3_keys[3],
+                **s3_options,
                 "file_overwrite": False, # Prevents folder/file collisions!
                 "default_acl": None,
             },
