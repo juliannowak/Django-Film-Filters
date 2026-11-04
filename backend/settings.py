@@ -104,8 +104,8 @@ STATICFILES_FINDERS = [
     'sass_processor.finders.CssFinder',
 ]
 
-MEDIA_ROOT = Path(os.getenv("MEDIA_DIR", BASE_DIR / "media")).resolve()
-CLUT_DIR = Path(os.getenv("CLUT_DIR", BASE_DIR / "CLUT")).resolve()
+MEDIA_ROOT = Path(os.getenv("MEDIA_DIR", BASE_DIR / "media"))
+CLUT_DIR = Path(os.getenv("CLUT_DIR", BASE_DIR / "CLUT"))
 
 # Force Django to stream files to disk instead of memory
 # 1. Hard cap on the request body (Accommodates files up to 50MB + metadata)
@@ -113,7 +113,7 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 57671680  # 55 MB in bytes
 # 2. Keep this LOW. Force anything over 2.5MB straight to disk streaming.
 FILE_UPLOAD_MAX_MEMORY_SIZE = 2621440   # 2.5 MB in bytes
 # 3. Specify a temporary directory for file uploads.
-FILE_UPLOAD_TEMP_DIR = Path(os.getenv("FILE_UPLOAD_TEMP_DIR", BASE_DIR)).resolve()
+FILE_UPLOAD_TEMP_DIR = Path(os.getenv("FILE_UPLOAD_TEMP_DIR", BASE_DIR))
 
 # Application definition
 INSTALLED_APPS = [
