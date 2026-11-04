@@ -57,4 +57,6 @@ python manage.py runserver;
     lock changes to session behind it 
     when it's not the active one
 - Docker support
+- CDN support
+- Presigned URLS support
 - Finish S3 bucket support by implementing boto3

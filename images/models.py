@@ -35,6 +35,7 @@ def _list_storage_files(directory):
 FILM_CHOICES_CACHE_KEY = "images:film_choices:v1"
 FILM_CHOICES_CACHE_SECONDS = 0 #indefinitely
 
+#TODO split by color and black and white, and add a separator in the choices list.
 def _load_film_choices():
     choices = {"1": "Color", "2": "Black and White"}
 

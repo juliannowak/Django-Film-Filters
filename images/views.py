@@ -28,9 +28,7 @@ from django.views.decorators.http import require_POST
 
 #S3 bucket helpers
 def storage_key(prefix, name):
-    prefix = str(prefix).strip("/")
-    name = str(name).lstrip("/")
-    return posixpath.join(prefix, name) if prefix else name
+    return posixpath.join(str(prefix).strip("/"), str(name).lstrip("/"))
 
 def media_key(name):
     return storage_key(settings.MEDIA_ROOT, name)
@@ -412,6 +410,8 @@ def display_images(request, session_key=None, switches=None):
                 is_cleaned = default_storage.exists(film_key)
 
                 if not is_cleaned:
+                    print(f"CLUT not found in storage: {film_key}", flush=True)
+                    #form.add_error("film", f"Could not find the CLUT file: {film_key}")
                     break
 
                 with default_storage.open(film_key, "rb") as clut_file:

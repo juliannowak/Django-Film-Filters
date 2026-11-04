@@ -46,6 +46,13 @@ if len(present_s3_keys) == len(S3_REQUIRED_KEYS):
         "secret_key": s3_values[1],
         "bucket_name": s3_values[2],
         "endpoint_url": s3_values[3],
+        "region_name": s3_values[3].split(".")[1],  # Extract region from URL
+        "custom_domain": None,
+            
+        # Presigned URL / Query String Auth Settings
+        "querystring_auth": True,
+        "querystring_expire": 3600,  # 1 hour expiration MAX: 24 hours (86400 seconds)
+        "signature_version": "s3v4",
     }
     STORAGES = {
         "default": {
