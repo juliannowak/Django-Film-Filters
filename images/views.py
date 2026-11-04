@@ -36,6 +36,18 @@ def media_key(name):
 def clut_key(name):
     return storage_key(settings.CLUT_DIR, name)
 
+def open_clut_image(film):
+    if settings.STORAGES["default"]["BACKEND"] == "storages.backends.s3boto3.S3Boto3Storage":
+        prefix = str(settings.CLUT_DIR).strip("/")
+        key = posixpath.join(prefix, film) if prefix else film
+        with default_storage.open(key, "rb") as file:
+            with Image.open(file) as image:
+                return image.copy()
+
+    path = os.path.join(settings.CLUT_DIR, film)
+    with Image.open(path) as image:
+        return image.copy()
+    
 # TODO: implement ascii filter
 def apply_ascii():
     pass
@@ -406,9 +418,6 @@ def display_images(request, session_key=None, switches=None):
                 open_image = Image.open(file)
 
                 film_choice = form.cleaned_data["film"]
-
-                is_cleaned = os.path.exists(film_choice)
-
                 film_key = clut_key(film_choice)
                 is_cleaned = default_storage.exists(film_key)
 
