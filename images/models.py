@@ -1,29 +1,103 @@
 # models.py
 
 from django.db import models
+from django.conf import settings
+from django.core.files.storage import default_storage
 from django.core.exceptions import ValidationError
 from django.contrib.sessions.models import Session
 from django.conf import settings
 import glob
 import os
 import uuid
+import posixpath
+
+def _uses_s3():
+    backend = settings.STORAGES["default"]["BACKEND"]
+    return backend == "storages.backends.s3boto3.S3Boto3Storage"
+
+def _media_upload_path(relative_path):
+    # Local FileSystemStorage already roots uploads at MEDIA_ROOT.
+    # S3 storage is rooted at the bucket, so add the MEDIA_ROOT key prefix.
+    if _uses_s3():
+        return posixpath.join(str(settings.MEDIA_ROOT).strip("/"), relative_path)
+    return relative_path
+
+def _list_storage_files(directory):
+    directories, files = default_storage.listdir(directory)
+
+    for filename in files:
+        yield posixpath.join(directory, filename)
+
+    for dirname in directories:
+        yield from _list_storage_files(posixpath.join(directory, dirname))
 
 def get_film_choices():
-    names = ["Color"]
-    files = ["1"]
-    files += glob.glob(os.path.join(settings.CLUT_DIR, "Color/*.png"), recursive=True)
-    names += [os.path.basename(str(file[:-4])) for file in glob.glob(
-        os.path.join(settings.CLUT_DIR, "Color/*.png"), recursive=True)]
-    files += ["2"]
-    names += ["Black and White"]
-    files += glob.glob(os.path.join(settings.CLUT_DIR,
-                       "Black and White/*.png"), recursive=True)
-    names += [os.path.basename(str(file[:-4])) for file in glob.glob(os.path.join(
-        settings.CLUT_DIR, "Black and White/*.png"), recursive=True)]
-    # TODO add user uploaded cluts to the list of choices too
-    file_map = dict(zip(files, names))
-    print(len(file_map.keys()))
-    return file_map
+    choices = {"1": "Color", "2": "Black and White"}
+
+    if _uses_s3():
+        root = str(settings.CLUT_DIR).strip("/")
+        files = _list_storage_files(root)
+        relative_files = (
+            key[len(root):].lstrip("/")
+            for key in files
+        )
+    else:
+        root = str(settings.CLUT_DIR)
+        local_files = glob.glob(
+            os.path.join(root, "**", "*.png"),
+            recursive=True,
+        )
+        relative_files = (
+            os.path.relpath(path, root).replace(os.sep, "/")
+            for path in local_files
+        )
+
+    for relative_path in relative_files:
+        if relative_path.lower().endswith(".png"):
+            choices[relative_path] = os.path.splitext(
+                posixpath.basename(relative_path)
+            )[0]
+
+    return choices
+
+def image_directory_path(instance, filename):
+    short_id = str(instance.short_id).replace("-", "")[:8]
+    path = posixpath.join(
+        "session", str(instance.session_key), "images", short_id, filename
+    )
+    return _media_upload_path(path)
+
+def uploaded_clut_directory_path(instance, filename):
+    short_id = str(instance.short_id).replace("-", "")[:8]
+    path = posixpath.join(
+        "session", str(instance.session_key), "cluts", short_id,
+        "user_uploads", filename,
+    )
+    return _media_upload_path(path)
+
+def sample_directory_path(instance, filename):
+    short_id = str(instance.short_id).replace("-", "")[:8]
+    path = posixpath.join(
+        "session", str(instance.session_key), "generated", short_id,
+        "samples", filename,
+    )
+    return _media_upload_path(path)
+
+def identity_directory_path(instance, filename):
+    short_id = str(instance.short_id).replace("-", "")[:8]
+    path = posixpath.join(
+        "session", str(instance.session_key), "generated", short_id,
+        "identities", filename,
+    )
+    return _media_upload_path(path)
+
+def clut_directory_path(instance, filename):
+    short_id = str(instance.short_id).replace("-", "")[:8]
+    path = posixpath.join(
+        "session", str(instance.session_key), "generated", short_id,
+        "cluts", filename,
+    )
+    return _media_upload_path(path)
 
 def validate_film_choice(value):
     if not isinstance(value, str):
@@ -33,29 +107,6 @@ def validate_film_choice(value):
         # redirect back to create page
         raise ValidationError(
             f"{value} is not an film. It is just there to seperate Color from Black and White.")
-
-# media file upload paths
-def image_directory_path(instance, filename):
-    short_id = str(instance.short_id).replace('-', '')[:8]
-    return os.path.join('session', str(instance.session_key), 'images', short_id, filename)
-
-def uploaded_clut_directory_path(instance, filename):
-    short_id = str(instance.short_id).replace('-', '')[:8]
-    return os.path.join('session', str(instance.session_key), 'cluts', short_id, 'user_uploads', filename)
-
-# these are for generated cluts, samples, and identities
-def sample_directory_path(instance, filename):
-    short_id = str(instance.short_id).replace('-', '')[:8]
-    return os.path.join('session', str(instance.session_key), 'generated', short_id, 'samples', filename)
-
-def identity_directory_path(instance, filename):
-    short_id = str(instance.short_id).replace('-', '')[:8]
-    return os.path.join('session', str(instance.session_key), 'generated', short_id, 'identities', filename)
-
-def clut_directory_path(instance, filename):
-    short_id = str(instance.short_id).replace('-', '')[:8]
-    return os.path.join('session', str(instance.session_key), 'generated', short_id, 'cluts', filename)
-
 # models for uploaded images and cluts TODO remove name or short_id, only one needed
 class ImageUpload(models.Model):
     short_id = models.UUIDField(

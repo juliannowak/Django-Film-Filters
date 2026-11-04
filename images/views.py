@@ -7,6 +7,10 @@ import tempfile
 import time
 import numpy as np
 from PIL import Image
+from django.core.files import File
+import shutil
+import posixpath
+from django.conf import settings
 from django import forms
 # models for: images, cluts, and created cluts.
 from .models import ImageUpload, CLUTUpload, CLUTCreator
@@ -22,31 +26,39 @@ from django.core.files.base import ContentFile
 from pathlib import Path
 from django.views.decorators.http import require_POST
 
+#S3 bucket helpers
+def storage_key(prefix, name):
+    return posixpath.join(prefix.strip("/"), name.lstrip("/"))
+
+def media_key(name):
+    return storage_key(settings.MEDIA_ROOT, name)
+
+def clut_key(name):
+    return storage_key(settings.CLUT_DIR, name)
+
 # TODO: implement ascii filter
 def apply_ascii():
     pass
 
 def filtered_images(images):
-
     filtered = []
 
     for image in images:
         image_open = Image.open(image.image)
+        clut_name = clut_key(image.film)
 
-        filter_path = os.path.join(settings.CLUT_DIR, image.film)
+        with default_storage.open(clut_name, "rb") as clut_file:
+            clut_image = Image.open(clut_file).copy()
 
-        filter = Image.open((filter_path))
-        print(filter_path)
-
-        if "Black and White" in filter_path:
-            filtered.append(apply_filter(
-                filter, image_open.convert("L"), True))
-
-        if "ASCII" in filter_path:
-            apply_ascii(image_open)
-
+        if "Black and White" in image.film:
+            result = apply_filter(clut_image, image_open.convert("L"), True)
+        elif "ASCII" in image.film:
+            result = apply_ascii(image_open)
         else:
-            filtered.append(apply_filter(filter, image_open))
+            result = apply_filter(clut_image, image_open)
+
+        filtered.append(result)
+
     return filtered
 
 def apply_filter(hald_img, img, is_monochrome=False):
@@ -397,19 +409,19 @@ def display_images(request, session_key=None, switches=None):
 
                 is_cleaned = os.path.exists(film_choice)
 
+                film_key = clut_key(film_choice)
+                is_cleaned = default_storage.exists(film_key)
+
                 if not is_cleaned:
                     break
 
-                filter_path = os.path.join(settings.CLUT_DIR, film_choice)
+                with default_storage.open(film_key, "rb") as clut_file:
+                    filter_image = Image.open(clut_file).copy()
 
-                filter = Image.open((filter_path))
-
-                if "Black and White" in filter_path:
-                    filtered = apply_filter(
-                        filter, open_image.convert("L"), True)
-
+                if "Black and White" in film_choice:
+                    filtered = apply_filter(filter_image, open_image.convert("L"), True)
                 else:
-                    filtered = apply_filter(filter, open_image)
+                    filtered = apply_filter(filter_image, open_image)
 
                 filtered_byte_arr = io.BytesIO()
 
@@ -554,97 +566,74 @@ def display_cluts(request, session_key=None, print_benchmarks=True):
             )
 
             # TODO replace with filename
-            clut_rel_path = f"session/{key}/generated/{short_id}/cluts/clut.png"
+            clut_rel_path = f"session/{key}/generated/{short_id}/cluts/clut.png"         
 
-            # Save uploaded files into Django's storage system
-
-            sample_path = default_storage.save(
-                sample_rel_path, ContentFile(sample_file.read())
-            )
-
-            identity_path = default_storage.save(
-                identity_rel_path, ContentFile(identity_file.read())
-            )
-
-            absolute_sample_path = os.path.join(
-                settings.MEDIA_ROOT, sample_path)
-
-            absolute_identity_path = os.path.join(
-                settings.MEDIA_ROOT, identity_path)
-
-            absolute_output_path = os.path.join(
-                settings.MEDIA_ROOT, clut_rel_path)
-
-            os.makedirs(os.path.dirname(absolute_output_path), exist_ok=True)
-
-            # 2. Run bash script safely using absolute paths
-
-            command = [
-                "bash",
-                "extract_CLUT.sh",
-                absolute_sample_path,
-                absolute_identity_path,
-                absolute_output_path,
-            ]
-
-            # 1. Start the high-precision timer
-
-            start_time = time.perf_counter()
+            sample_name = None
+            identity_name = None
+            saved_clut = None
 
             try:
-                # 2. Run the process (with a defensive 15-second timeout)
-
-                subprocess.run(
-                    command, capture_output=True, text=True, check=True, timeout=15
+                # Pass the uploaded files directly to storage rather than reading them
+                # all into memory with .read().
+                sample_name = default_storage.save(
+                    media_key(sample_rel_path), sample_file
+                )
+                identity_name = default_storage.save(
+                    media_key(identity_rel_path), identity_file
                 )
 
-                # 3. Calculate total elapsed time
+                with tempfile.TemporaryDirectory() as temp_dir:
+                    sample_path = os.path.join(temp_dir, "sample")
+                    identity_path = os.path.join(temp_dir, "identity")
+                    output_path = os.path.join(temp_dir, "clut.png")
 
-                execution_time = time.perf_counter() - start_time
+                    with default_storage.open(sample_name, "rb") as src, open(sample_path, "wb") as dst:
+                        shutil.copyfileobj(src, dst)
 
-                if print_benchmarks:
-                    print(
-                        f"[BENCHMARK] CLUT extraction completed successfully in {execution_time:.3f} seconds."
+                    with default_storage.open(identity_name, "rb") as src, open(identity_path, "wb") as dst:
+                        shutil.copyfileobj(src, dst)
+
+                    subprocess.run(
+                        [
+                            "bash",
+                            str(settings.BASE_DIR / "extract_CLUT.sh"),
+                            sample_path,
+                            identity_path,
+                            output_path,
+                        ],
+                        capture_output=True,
+                        text=True,
+                        check=True,
+                        timeout=15,
                     )
 
-                if os.path.exists(absolute_output_path):
-                    instance.clut = clut_rel_path
+                    if not os.path.isfile(output_path):
+                        raise FileNotFoundError("CLUT extraction did not create an output file.")
 
-                    instance.save()
+                    with open(output_path, "rb") as output_file:
+                        saved_clut = default_storage.save(
+                            media_key(clut_rel_path), File(output_file)
+                        )
 
-                    return redirect("cluts")
+                # Store the already-saved storage keys on the model fields.
+                instance.session_key = key  # This model field is a CharField.
+                instance.sample = sample_name
+                instance.identity = identity_name
+                instance.clut = saved_clut
+                instance.save()
 
-                else:
-                    raise FileNotFoundError(
-                        f"Bash process failed to write output.")
+            except Exception:
+                # Avoid orphaned objects if extraction or the database save fails.
+                for name in (sample_name, identity_name, saved_clut):
+                    if name:
+                        default_storage.delete(name)
+                raise
 
-            except subprocess.TimeoutExpired:
-                execution_time = time.perf_counter() - start_time
-
-                if print_benchmarks:
-                    print(
-                        f"[BENCHMARK] CRITICAL: Script timed out and was killed after {execution_time:.3f} seconds."
-                    )
-
-                # return redirect('error_page')
-
-            except subprocess.CalledProcessError as e:
-                execution_time = time.perf_counter() - start_time
-
-                if print_benchmarks:
-                    print(
-                        f"[BENCHMARK] ERROR: Script failed after {execution_time:.3f} seconds."
-                    )
-
-                    print(f"[BENCHMARK] Stderr output: {e.stderr}")
-
-                # return redirect('error_page')
+            return redirect("cluts")
 
         else:
             print("Invalid form data:", form.errors)
-
             return redirect("cluts")  # TODO: redirect to error page
-
     else:
         form = CreateCLUTForm()
 
