@@ -40,11 +40,12 @@ S3_REQUIRED_KEYS = [
 present_s3_keys = [key for key in S3_REQUIRED_KEYS if os.environ.get(key)]
 
 if len(present_s3_keys) == len(S3_REQUIRED_KEYS):
+    s3_values = [os.environ.get(name) for name in present_s3_keys]
     s3_options = {
-        "access_key": present_s3_keys[0],
-        "secret_key": present_s3_keys[1],
-        "bucket_name": present_s3_keys[2],
-        "endpoint_url": present_s3_keys[3],
+        "access_key": s3_values[0],
+        "secret_key": s3_values[1],
+        "bucket_name": s3_values[2],
+        "endpoint_url": s3_values[3],
     }
     STORAGES = {
         "default": {
