@@ -28,26 +28,16 @@ from django.views.decorators.http import require_POST
 
 #S3 bucket helpers
 def storage_key(prefix, name):
-    return posixpath.join(prefix.strip("/"), name.lstrip("/"))
+    prefix = str(prefix).strip("/")
+    name = str(name).lstrip("/")
+    return posixpath.join(prefix, name) if prefix else name
 
 def media_key(name):
     return storage_key(settings.MEDIA_ROOT, name)
 
 def clut_key(name):
     return storage_key(settings.CLUT_DIR, name)
-
-def open_clut_image(film):
-    if settings.STORAGES["default"]["BACKEND"] == "storages.backends.s3boto3.S3Boto3Storage":
-        prefix = str(settings.CLUT_DIR).strip("/")
-        key = posixpath.join(prefix, film) if prefix else film
-        with default_storage.open(key, "rb") as file:
-            with Image.open(file) as image:
-                return image.copy()
-
-    path = os.path.join(settings.CLUT_DIR, film)
-    with Image.open(path) as image:
-        return image.copy()
-    
+ 
 # TODO: implement ascii filter
 def apply_ascii():
     pass
@@ -549,57 +539,33 @@ def display_cluts(request, session_key=None, print_benchmarks=True):
         form = CreateCLUTForm(request.POST, request.FILES)
 
         if form.is_valid():
-            instance = form.save(commit=False)  # Don't save to DB yet
+            instance = form.save(commit=False)
+            instance.session_key = key  # CLUTCreator.session_key is a CharField.
 
-            short_id = str(instance.short_id).replace("-", "")[:8]
-
-            filename = instance.filename
-
-            # Auto-populate 'user' field with current user
-            instance.session_key = Session.objects.get(session_key=key)
-
-            # 1. Define paths and save uploaded files to disk safely
-
-            sample_file = request.FILES["sample"]
-
-            identity_file = request.FILES["identity"]
-
-            # Use safe file naming to prevent path traversal issues
-
-            sample_rel_path = (
-                f"session/{key}/generated/{short_id}/samples/{sample_file.name}"
-            )
-
-            identity_rel_path = (
-                f"session/{key}/generated/{short_id}/identities/{identity_file.name}"
-            )
-
-            # TODO replace with filename
-            clut_rel_path = f"session/{key}/generated/{short_id}/cluts/clut.png"         
-
-            sample_name = None
-            identity_name = None
-            saved_clut = None
+            sample_file = form.cleaned_data["sample"]
+            identity_file = form.cleaned_data["identity"]
+            saved_fields = []
 
             try:
-                # Pass the uploaded files directly to storage rather than reading them
-                # all into memory with .read().
-                sample_name = default_storage.save(
-                    media_key(sample_rel_path), sample_file
-                )
-                identity_name = default_storage.save(
-                    media_key(identity_rel_path), identity_file
-                )
+                # The model fields' upload_to functions build the correct names
+                # for both local storage and S3.
+                instance.sample.save(sample_file.name, sample_file, save=False)
+                saved_fields.append("sample")
+
+                instance.identity.save(identity_file.name, identity_file, save=False)
+                saved_fields.append("identity")
 
                 with tempfile.TemporaryDirectory() as temp_dir:
                     sample_path = os.path.join(temp_dir, "sample")
                     identity_path = os.path.join(temp_dir, "identity")
                     output_path = os.path.join(temp_dir, "clut.png")
 
-                    with default_storage.open(sample_name, "rb") as src, open(sample_path, "wb") as dst:
+                    # Stage storage files locally because the shell script needs
+                    # filesystem paths. Works with local storage and S3.
+                    with instance.sample.open("rb") as src, open(sample_path, "wb") as dst:
                         shutil.copyfileobj(src, dst)
 
-                    with default_storage.open(identity_name, "rb") as src, open(identity_path, "wb") as dst:
+                    with instance.identity.open("rb") as src, open(identity_path, "wb") as dst:
                         shutil.copyfileobj(src, dst)
 
                     subprocess.run(
@@ -610,32 +576,28 @@ def display_cluts(request, session_key=None, print_benchmarks=True):
                             identity_path,
                             output_path,
                         ],
+                        check=True,
                         capture_output=True,
                         text=True,
-                        check=True,
                         timeout=15,
                     )
 
                     if not os.path.isfile(output_path):
-                        raise FileNotFoundError("CLUT extraction did not create an output file.")
-
-                    with open(output_path, "rb") as output_file:
-                        saved_clut = default_storage.save(
-                            media_key(clut_rel_path), File(output_file)
+                        raise FileNotFoundError(
+                            "CLUT extraction did not create an output file."
                         )
 
-                # Store the already-saved storage keys on the model fields.
-                instance.session_key = key  # This model field is a CharField.
-                instance.sample = sample_name
-                instance.identity = identity_name
-                instance.clut = saved_clut
+                    with open(output_path, "rb") as output_file:
+                        instance.clut.save("clut.png", File(output_file), save=False)
+                    saved_fields.append("clut")
+
                 instance.save()
 
             except Exception:
-                # Avoid orphaned objects if extraction or the database save fails.
-                for name in (sample_name, identity_name, saved_clut):
-                    if name:
-                        default_storage.delete(name)
+                # Storage is not part of the database transaction, so remove
+                # any files uploaded before the failure.
+                for field_name in saved_fields:
+                    getattr(instance, field_name).delete(save=False)
                 raise
 
             return redirect("cluts")

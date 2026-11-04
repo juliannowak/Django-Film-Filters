@@ -10,6 +10,7 @@ import glob
 import os
 import uuid
 import posixpath
+from django.core.cache import cache
 
 def _uses_s3():
     backend = settings.STORAGES["default"]["BACKEND"]
@@ -31,16 +32,16 @@ def _list_storage_files(directory):
     for dirname in directories:
         yield from _list_storage_files(posixpath.join(directory, dirname))
 
-def get_film_choices():
+FILM_CHOICES_CACHE_KEY = "images:film_choices:v1"
+FILM_CHOICES_CACHE_SECONDS = 0 #indefinitely
+
+def _load_film_choices():
     choices = {"1": "Color", "2": "Black and White"}
 
     if _uses_s3():
         root = str(settings.CLUT_DIR).strip("/")
         files = _list_storage_files(root)
-        relative_files = (
-            key[len(root):].lstrip("/")
-            for key in files
-        )
+        relative_files = (key[len(root):].lstrip("/") for key in files)
     else:
         root = str(settings.CLUT_DIR)
         local_files = glob.glob(
@@ -59,6 +60,13 @@ def get_film_choices():
             )[0]
 
     return choices
+
+def get_film_choices():
+    return cache.get_or_set(
+        FILM_CHOICES_CACHE_KEY,
+        _load_film_choices,
+        timeout=FILM_CHOICES_CACHE_SECONDS,
+    )
 
 def image_directory_path(instance, filename):
     short_id = str(instance.short_id).replace("-", "")[:8]
@@ -116,8 +124,8 @@ class ImageUpload(models.Model):
         max_length=40, db_index=True, null=True, blank=True)
     # session_key = models.ForeignKey(Session, on_delete=models.SET_NULL, blank=True, null=True)
     image = models.ImageField(upload_to=image_directory_path)
-    # TODO change these to file fields
-    filtered = models.ImageField(upload_to=image_directory_path, default=None)
+    # TODO maybe make this not nullable, but make sure to process the file before saving the model instance and display a loading spinner while the file is being processed.
+    filtered = models.ImageField(upload_to=image_directory_path, default=None, blank=True, null=True)
     film = models.CharField(max_length=200, choices=get_film_choices, validators=[
                             validate_film_choice], blank=False, null=False, default=None)
     created_at = models.DateTimeField(auto_now_add=True)
