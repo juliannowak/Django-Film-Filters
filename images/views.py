@@ -368,9 +368,11 @@ def delete_image_handler(request, session_key=None, pk=None):
 def display_images(request, session_key=None, switches=None):
     if switches is None:
         switches = []
-    raw_switches = request.GET.getlist("switches")
-    switches = [val.lower() in ["true", "1", "t", "yes"]
-                for val in raw_switches]
+    raw_switches = request.GET.get("switches", "")
+    switches = [
+        value.strip().lower() in {"true", "1", "t", "yes"}
+        for value in raw_switches.split(",")
+    ] if raw_switches else []
 
     # Grab key from GET or fall back to browser session
     key = request.GET.get("key", "")
@@ -451,14 +453,9 @@ def display_images(request, session_key=None, switches=None):
 
     filtered = filtered_images(key_images)
 
-    # render all images filtered if switches were not passed
-
+    # render all images filtered if switches were not passed for it or at all
     if not switches:
-        for i in range(len(key_images)):
-            switches.append(False)
-
-    else:
-        switches = string_to_boolean_list(switches)
+        switches = (switches + [False] * len(key_images))[:len(key_images)]
 
     # create context and render form
 

@@ -36,6 +36,9 @@ S3_REQUIRED_KEYS = [
     'MEDIA_DIR',
 ]
 
+PRESIGNED_URLS = os.getenv("PRESIGNED_URLS", "true").lower() == "true"
+#TODO: Add support for CDN or ALB or other options and default to public bucket
+
 # 2. Check which keys are present
 present_s3_keys = [key for key in S3_REQUIRED_KEYS if os.environ.get(key)]
 
@@ -49,11 +52,12 @@ if len(present_s3_keys) == len(S3_REQUIRED_KEYS):
         "region_name": s3_values[3].split(".")[1],  # Extract region from URL
         "custom_domain": None,
             
-        # Presigned URL / Query String Auth Settings
-        "querystring_auth": True,
-        "querystring_expire": 3600,  # 1 hour expiration MAX: 24 hours (86400 seconds)
-        "signature_version": "s3v4",
     }
+    # Presigned URL / Query String Auth Settings
+    if PRESIGNED_URLS:
+        s3_options["querystring_auth"] = True
+        s3_options["querystring_expire"] = 3600  # 1 hour expiration MAX: 24 hours (86400 seconds)
+        s3_options["signature_version"] = "s3v4"
     STORAGES = {
         "default": {
             "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
