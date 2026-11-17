@@ -12,6 +12,11 @@ import uuid
 import posixpath
 from django.core.cache import cache
 
+if settings.DEBUG:
+    root = str(settings.CLUT_DIR).strip("/")
+    print(settings.STORAGES["default"]["BACKEND"], repr(root))
+    print(default_storage.listdir(root))
+
 def _uses_s3():
     backend = settings.STORAGES["default"]["BACKEND"]
     return backend == "storages.backends.s3boto3.S3Boto3Storage"
@@ -33,11 +38,13 @@ def _list_storage_files(directory):
         yield from _list_storage_files(posixpath.join(directory, dirname))
 
 FILM_CHOICES_CACHE_KEY = "images:film_choices:v1"
-FILM_CHOICES_CACHE_SECONDS = 0 #indefinitely
+FILM_CHOICES_CACHE_SECONDS = None #indefinitely
 
-#TODO split by color and black and white, and add a separator in the choices list.
 def _load_film_choices():
-    choices = {"1": "Color", "2": "Black and White"}
+    groups = {
+        "Color": [],
+        "Black and White": [],
+    }
 
     if _uses_s3():
         root = str(settings.CLUT_DIR).strip("/")
@@ -55,12 +62,18 @@ def _load_film_choices():
         )
 
     for relative_path in relative_files:
-        if relative_path.lower().endswith(".png"):
-            choices[relative_path] = os.path.splitext(
-                posixpath.basename(relative_path)
-            )[0]
+        if not relative_path.lower().endswith(".png"):
+            continue
 
-    return choices
+        folder, separator, _filename = relative_path.partition("/")
+        if separator and folder in groups:
+            label = os.path.splitext(posixpath.basename(relative_path))[0]
+            groups[folder].append((relative_path, label))
+
+    return [
+        (folder, sorted(film_choices, key=lambda choice: choice[1].lower()))
+        for folder, film_choices in groups.items()
+    ]
 
 def get_film_choices():
     return cache.get_or_set(
