@@ -16,10 +16,38 @@
 
     <h1>Your Images</h1><br>
     {% if key %}
-    <p>Your ID: {{key}}</p>
-    <p>Keep this ID (or your link) if you want to find your images online again.</p>
+      <div class="card shadow-sm my-3">
+        <div class="card-body">
+          <p class="card-text">
+            Keep this key to find your images again. Treat it like a private link.
+          </p>
+
+          <div class="input-group">
+            <label class="visually-hidden" for="user-key">Your image key</label>
+            <input
+              id="user-key"
+              class="form-control font-monospace"
+              type="text"
+              value="{{ key }}"
+              readonly
+              aria-describedby="copy-status"
+            >
+            <button
+              id="copy-key-button"
+              class="btn btn-primary"
+              type="button"
+              aria-label="Copy your image key"
+            >
+              Copy key
+            </button>
+          </div>
+
+          <small id="copy-status" class="form-text" role="status" aria-live="polite"></small>
+        </div>
+      </div>
     {% endif %}
 
+    <h2>Your saved images</h2>
     {% if images %}
     <ul>
       <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample"
@@ -78,6 +106,25 @@
       </table>
       <input type="submit" value="Submit">
     </form>
+  <script>
+    const copyButton = document.getElementById("copy-key-button");
+    const keyInput = document.getElementById("user-key");
+    const copyStatus = document.getElementById("copy-status");
+
+    if (copyButton && keyInput && copyStatus) {
+      copyButton.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(keyInput.value);
+          copyStatus.textContent = "Key copied.";
+        } catch {
+          // Keep the key selectable if clipboard access is unavailable.
+          keyInput.select();
+          keyInput.setSelectionRange(0, keyInput.value.length);
+          copyStatus.textContent = "Select and copy the key.";
+        }
+      });
+    }
+  </script>
   <script src="{% static 'main.js' %}"></script>
 {% endblock %}
 

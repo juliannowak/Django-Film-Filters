@@ -129,7 +129,9 @@ def validate_film_choice(value):
         # redirect back to create page
         raise ValidationError(
             f"{value} is not an film. It is just there to seperate Color from Black and White.")
-# models for uploaded images and cluts TODO remove name or short_id, only one needed
+
+#TODO remove name or short_id, only one needed
+#TODO add upload checkbox
 class ImageUpload(models.Model):
     short_id = models.UUIDField(
         default=uuid.uuid4, editable=False, unique=True)
@@ -164,7 +166,7 @@ class CLUTUpload(models.Model):
     def __str__(self):
         return f'{self.film} {self.exposure}'
 
-# models for generated cluts, samples, and identities
+#TODO add upload checkbox
 class CLUTCreator(models.Model):
     short_id = models.UUIDField(
         default=uuid.uuid4, editable=False, unique=True)
