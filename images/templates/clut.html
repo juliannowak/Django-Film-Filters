@@ -3,18 +3,18 @@
 {% load static %}
 {% load sass_tags %}
 
-{% block title %}Your haldCLUTs{% endblock %}
+{% block title %}CLUT Creator{% endblock %}
 
 {% block extra_head %}
 <meta name="description" content="This page is for uploading and managing your haldCLUTs.">
 {% endblock %}
 
 {% block content %}
-    <h1>Your haldCLUTs</h1><br>
+    <h1>Your Filters</h1><br>
 
     {% if key %}
         <p>Your ID: {{ key }}</p>
-        <p>Keep this ID (or your link) if you want to find your haldCLUTs online again.</p>
+        <p>Keep this ID (or your link) if you want to find your filters online again.</p>
     {% endif %}
 
     {% if cluts %}
@@ -67,12 +67,14 @@
             </div>
         </div>
     {% else %}
-        <p>No CLUTs found.<br>Please upload a CLUT to begin</p>
+        <p>No filters found.<br>Please upload a filter to begin</p>
     {% endif %}
+
+    <p>to use your generated filter, you must download it and use our <a href="/images">Filter Studio</a>.</p>
     
     <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample"
         aria-expanded="false" aria-controls="collapseExample">
-        Contributor Instructions: Creating a HaldCLUT from Film
+        Contributor Instructions: Creating a filter (HaldCLUT) from Film (or any image)
     </button>
     <div class="collapse" id="collapseExample">
         To generate an accurate HaldCLUT file, our software needs to compare two photos of the exact same scene: the
