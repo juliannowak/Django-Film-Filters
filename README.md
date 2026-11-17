@@ -39,7 +39,7 @@ conda create -n django-environment;
 conda activate django-environment;
 #install requirements (TODO create requirements.txt option)
 conda install django pillow numpy;
-python -m pip install django-bootstrap5;
+python -m pip install django-bootstrap5 django-storages[s3];
 #start the server
 python manage.py migrate;
 python manage.py collectstatic;
@@ -61,7 +61,7 @@ python manage.py runserver;
 
 ## Automated TODO List
 - **image2ascii.py** (Line 30): write an argparse, args: input, output, width, rotate, invert, contrast, brightness
-- **backend/settings.py** (Line 40): Add support for CDN or ALB or other options and default to public bucket
+- **backend/settings.py** (Line 51): Add support for CDN or ALB or other options and default to public bucket
 - **images/models.py** (Line 38): split by color and black and white, and add a separator in the choices list.
 - **images/models.py** (Line 128): maybe make this not nullable, but make sure to process the file before saving the model instance and display a loading spinner while the file is being processed.
 - **images/views.py** (Line 39): implement ascii filter
