@@ -24,9 +24,9 @@ cd CLUT/Black\ and\ White
 find . -type f -exec mv -t . {} +;
 rmdir */
 cd ..; cd ..;
-#optional: if you want a donate page, remember to replace $YOUR_BTC_ADDRESS with your BTC address.
+#optional: if you want a donate page, remember to replace $BTC_ADDRESS with your BTC address.
 cd images/templates/ ;
-sed -i 's/YOUR_BITCOIN_ADDRESS/$YOUR_BTC_ADDRESS/g' donate.html;
+sed -i 's/BITCOIN_ADDRESS/$BTC_ADDRESS/g' donate.html;
 #repeat for other addresses ETH and LTC
 #optional: if you want to leave an email
 sed -i 's/YOUR_EMAIL_ADDRESS/$YOUR_EMAIL_ADDRESS/g' about.html;
@@ -46,9 +46,9 @@ python manage.py collectstatic;
 python manage.py runserver;
 
 ```
-## Public Hosting (on VPS or similar):
+## Public Hosting (Deployment on VPS or similar):
 - connect it to a reverse proxy server like Nginx (using gunicorn)
-- change the django secret in the settings file, and switch DEBUG=True
+- run the deploy.sh script
 - remember DO NOT host with root account and disable root access when it is not needed
 
 ## GOALS:
@@ -56,7 +56,8 @@ python manage.py runserver;
     lock changes to session behind it 
     when it's not the active one
 - Docker support
-- CDN ALB support
+- alternative to backblaze: AWS s3 support 
+- alternative to local, and buckets: CDN ALB support
 - fetch API
 
 ## Automated TODO List
